@@ -1,11 +1,11 @@
 from typing import Hashable, Self
 
 from forging_blocks.domain import ValueObject
+from forging_blocks.foundation import Err, Ok, Result
 from forging_releases.domain.errors import (
-    InvalidReleaseVersionError,
     InvalidTagNameError,
 )
-from forging_releases.domain.value_objects import ReleaseVersion
+from forging_releases.domain.value_objects.release_version import ReleaseVersion
 
 
 class TagName(ValueObject[str]):
@@ -16,27 +16,30 @@ class TagName(ValueObject[str]):
     def __init__(self, value: str) -> None:
         super().__init__()
 
-        if not value.startswith(self.PREFIX):
-            raise InvalidTagNameError(value)
+        self._value = value
+        self._freeze()
 
-        version_part = value[len(self.PREFIX) :]
+    @classmethod
+    def create(cls, value: str) -> Result[Self, InvalidTagNameError]:
+        if not value.startswith(cls.PREFIX):
+            return Err(InvalidTagNameError(value))
+
+        version_part = value[len(cls.PREFIX) :]
         parts = version_part.split(".")
 
         if len(parts) != 3:
-            raise InvalidTagNameError(value)
+            return Err(InvalidTagNameError(value))
 
         try:
             major, minor, patch = (int(p) for p in parts)
-        except ValueError as exc:
-            raise InvalidTagNameError(value) from exc
+        except ValueError:
+            return Err(InvalidTagNameError(value))
 
-        try:
-            ReleaseVersion(major, minor, patch)
-        except InvalidReleaseVersionError as exc:
-            raise InvalidTagNameError(value) from exc
+        version_result = ReleaseVersion.create(major, minor, patch)
+        if version_result.is_err:
+            return Err(InvalidTagNameError(value))
 
-        self._value = value
-        self._freeze()
+        return Ok(cls(value))
 
     @classmethod
     def for_version(cls, version: ReleaseVersion) -> Self:

@@ -11,19 +11,24 @@ class ReleaseVersion(ValueObject[str]):
     def __init__(self, major: int, minor: int, patch: int) -> None:
         super().__init__()
 
-        if min(major, minor, patch) < 0:
-            raise InvalidReleaseVersionError(f"{major}.{minor}.{patch}")
-
         self._major = major
         self._minor = minor
         self._patch = patch
         self._freeze()
 
     @classmethod
+    def create(
+        cls, major: int, minor: int, patch: int
+    ) -> Result[Self, InvalidReleaseVersionError]:
+        if min(major, minor, patch) < 0:
+            return Err(InvalidReleaseVersionError(f"{major}.{minor}.{patch}"))
+        return Ok(cls(major, minor, patch))
+
+    @classmethod
     def from_str(cls, raw_value: str) -> Result[Self, InvalidReleaseVersionError]:
         try:
             major, minor, patch = map(int, raw_value.split("."))
-            return Ok(cls(major, minor, patch))
+            return cls.create(major, minor, patch)
         except Exception:
             return Err(InvalidReleaseVersionError(raw_value))
 

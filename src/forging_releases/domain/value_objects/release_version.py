@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Hashable
+from typing import Hashable, Self
 
 from forging_blocks.domain import ValueObject
 from forging_releases.domain.errors import InvalidReleaseVersionError
@@ -21,7 +19,7 @@ class ReleaseVersion(ValueObject[str]):
         self._freeze()
 
     @classmethod
-    def from_str(cls, raw_value: str) -> ReleaseVersion:
+    def from_str(cls, raw_value: str) -> Self:
         try:
             major, minor, patch = map(int, raw_value.split("."))
             return cls(major, minor, patch)

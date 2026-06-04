@@ -1,5 +1,6 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
+from forging_blocks.foundation import Ok
 from forging_blocks.foundation.errors.cant_modify_immutable_attribute_error import (
     CantModifyImmutableAttributeError,
 )
@@ -19,17 +20,28 @@ class TestReleaseBaseBranchName:
 
         assert branch.value == "release/v1.2.3"
 
-    def test_value_when_called_then_returns_raw_value(self) -> None:
-        branch = ReleaseBaseBranchName("release/v0.0.1")
+    @pytest.mark.parametrize(
+        "value, expected_value",
+        [
+            pytest.param("release/v0.0.1", "release/v0.0.1", id="standard"),
+            pytest.param("release/v1.2.3", "release/v1.2.3", id="typical_version"),
+            pytest.param("release/v", "release/v", id="prefix_only"),
+            pytest.param(
+                "release/v1.2.3-beta+build",
+                "release/v1.2.3-beta+build",
+                id="semver_with_suffix",
+            ),
+            pytest.param(
+                "release/v999.999.999", "release/v999.999.999", id="large_components"
+            ),
+        ],
+    )
+    def test_from_string_when_value_starts_with_release_v_then_ok(
+        self, value: str, expected_value: str
+    ) -> None:
+        result = ReleaseBaseBranchName.from_string(value)
 
-        assert branch.value == "release/v0.0.1"
-
-    def test_from_string_when_value_startsWith_release_v_then_ok(self) -> None:
-        result = ReleaseBaseBranchName.from_string("release/v0.0.1")
-
-        assert result.is_ok is True
-        assert result.value is not None
-        assert result.value.value == "release/v0.0.1"
+        assert result == Ok(ReleaseBaseBranchName(expected_value))
 
     @pytest.mark.parametrize(
         "value",
@@ -38,6 +50,11 @@ class TestReleaseBaseBranchName:
             pytest.param("release/foo", id="non_version_value"),
             pytest.param("", id="empty_string"),
             pytest.param("main", id="plain_branch"),
+            pytest.param("   ", id="whitespace_only"),
+            pytest.param(" release/v1.0.0", id="leading_space"),
+            pytest.param("develop", id="develop_branch"),
+            pytest.param("hotfix/v1.0.0", id="hotfix_prefix"),
+            pytest.param("Release/v1.0.0", id="uppercase_release"),
         ],
     )
     def test_from_string_when_value_doesnt_start_with_release_v_then_err(
@@ -47,6 +64,7 @@ class TestReleaseBaseBranchName:
 
         assert result.is_err is True
         assert isinstance(result.error, InvalidReleaseBranchNameError)
+        assert value in result.error.message.value
 
     def test_equality_when_same_value_then_equal(self) -> None:
         assert ReleaseBaseBranchName("release/v1.0.0") == ReleaseBaseBranchName(
@@ -81,7 +99,7 @@ class TestReleaseBaseBranchName:
 
         assert repr(branch) == "ReleaseBaseBranchName('release/v1.0.0')"
 
-    def test_init_when_created_then_cannot_modify_value(self) -> None:
+    def test_setattr_when_frozen_then_raises(self) -> None:
         branch = ReleaseBaseBranchName("release/v1.0.0")
 
         with pytest.raises(CantModifyImmutableAttributeError):

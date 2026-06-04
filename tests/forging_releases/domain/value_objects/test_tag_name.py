@@ -1,5 +1,6 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
+from forging_blocks.foundation import Ok
 from forging_blocks.foundation.errors.cant_modify_immutable_attribute_error import (
     CantModifyImmutableAttributeError,
 )
@@ -14,57 +15,85 @@ class TestTagName:
         [
             pytest.param("1.2.3", id="missing_prefix"),
             pytest.param("version/1.2.3", id="wrong_prefix"),
+            pytest.param("v", id="prefix_only"),
+            pytest.param("", id="empty_string"),
+            pytest.param("V1.2.3", id="uppercase_v"),
+            pytest.param(" v1.2.3", id="leading_space"),
+            pytest.param("tags/v1.2.3", id="tags_prefix"),
+            pytest.param("release/v1.2.3", id="release_prefix"),
+            pytest.param("1.2.3v", id="suffix_v"),
+            pytest.param("v1.2.3 extra", id="trailing_content"),
         ],
     )
-    def test_init_when_invalid_prefix_then_error(self, value: str) -> None:
-        with pytest.raises(InvalidTagNameError):
-            TagName(value)
+    def test_create_when_invalid_prefix_then_err(self, value: str) -> None:
+        result = TagName.create(value)
+
+        assert result.is_err is True
+        assert isinstance(result.error, InvalidTagNameError)
+        assert value in result.error.message.value
 
     @pytest.mark.parametrize(
         "value",
         [
             pytest.param("v1.2", id="too_few_parts"),
             pytest.param("v1.2.3.4", id="too_many_parts"),
+            pytest.param("v", id="prefix_only_no_dots"),
+            pytest.param("v1", id="single_component"),
+            pytest.param("v1.2.3.4.5", id="five_parts"),
+            pytest.param("v.", id="trailing_dot"),
+            pytest.param("v..", id="double_dot"),
+            pytest.param("v.1.2", id="leading_dot_after_prefix"),
         ],
     )
-    def test_init_when_invalid_structure_then_error(self, value: str) -> None:
-        with pytest.raises(InvalidTagNameError):
-            TagName(value)
+    def test_create_when_invalid_structure_then_err(self, value: str) -> None:
+        result = TagName.create(value)
+
+        assert result.is_err is True
+        assert isinstance(result.error, InvalidTagNameError)
+        assert value in result.error.message.value
 
     @pytest.mark.parametrize(
         "value",
         [
             pytest.param("v1.-2.3", id="negative_minor"),
             pytest.param("v1.a.3", id="non_numeric"),
+            pytest.param("v-1.2.3", id="negative_major"),
+            pytest.param("v1.2.-3", id="negative_patch"),
+            pytest.param("v1.2.x", id="non_numeric_patch"),
+            pytest.param("vabc.def.ghi", id="all_non_numeric"),
         ],
     )
-    def test_init_when_invalid_version_then_error(self, value: str) -> None:
-        with pytest.raises(InvalidTagNameError):
-            TagName(value)
+    def test_create_when_invalid_version_then_err(self, value: str) -> None:
+        result = TagName.create(value)
 
-    def test_init_when_valid_value_then_success(self) -> None:
-        tag = TagName("v1.2.3")
+        assert result.is_err is True
+        assert isinstance(result.error, InvalidTagNameError)
+        assert value in result.error.message.value
 
-        assert tag.value == "v1.2.3"
+    def test_create_when_valid_value_then_ok(self) -> None:
+        result = TagName.create("v1.2.3")
 
-    def test_value_when_called_then_returns_raw_value(self) -> None:
-        tag = TagName("v1.2.3")
+        assert result == Ok(TagName("v1.2.3"))
 
-        assert tag.value == "v1.2.3"
-
-    def test_for_version_when_valid_version_then_tag_created(self) -> None:
-        version = ReleaseVersion(1, 2, 3)
-
+    @pytest.mark.parametrize(
+        "version, expected",
+        [
+            pytest.param(ReleaseVersion(1, 2, 3), "v1.2.3", id="standard"),
+            pytest.param(ReleaseVersion(0, 0, 0), "v0.0.0", id="all_zeros"),
+            pytest.param(
+                ReleaseVersion(999, 999, 999), "v999.999.999", id="large_components"
+            ),
+            pytest.param(ReleaseVersion(1, 0, 0), "v1.0.0", id="only_major"),
+            pytest.param(ReleaseVersion(0, 1, 0), "v0.1.0", id="only_minor"),
+            pytest.param(ReleaseVersion(0, 0, 1), "v0.0.1", id="only_patch"),
+        ],
+    )
+    def test_for_version_when_version_then_correct_value(
+        self, version: ReleaseVersion, expected: str
+    ) -> None:
         tag = TagName.for_version(version)
 
-        assert tag.value == "v1.2.3"
-
-    def test_for_version_when_zero_version_then_tag_created(self) -> None:
-        version = ReleaseVersion(0, 0, 0)
-
-        tag = TagName.for_version(version)
-
-        assert tag.value == "v0.0.0"
+        assert tag.value == expected
 
     def test_equality_when_same_value_then_equal(self) -> None:
         assert TagName("v2.0.0") == TagName("v2.0.0")
@@ -91,7 +120,7 @@ class TestTagName:
 
         assert repr(tag) == "TagName('v1.0.0')"
 
-    def test_init_when_created_then_cannot_modify_value(self) -> None:
+    def test_setattr_when_frozen_then_raises(self) -> None:
         tag = TagName("v1.2.3")
 
         with pytest.raises(CantModifyImmutableAttributeError):

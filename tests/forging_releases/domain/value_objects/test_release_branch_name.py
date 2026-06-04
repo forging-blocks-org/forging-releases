@@ -1,5 +1,6 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
+from forging_blocks.foundation import Ok
 from forging_blocks.foundation.errors.cant_modify_immutable_attribute_error import (
     CantModifyImmutableAttributeError,
 )
@@ -21,35 +22,51 @@ class TestReleaseBranchName:
             pytest.param("release/v1.-2.3", id="negative_version_component"),
             pytest.param("release/vx.y.z", id="non_numeric_version"),
             pytest.param("release/v1.x.3", id="non_numeric_minor"),
+            pytest.param("", id="empty_string"),
+            pytest.param("release/v", id="prefix_only"),
+            pytest.param("Release/v1.2.3", id="uppercase_release"),
+            pytest.param(" release/v1.2.3", id="leading_space"),
+            pytest.param("release/v-1.2.3", id="negative_major"),
+            pytest.param("release/v1.2.-3", id="negative_patch"),
+            pytest.param("release/v1.2.3.4.5", id="five_parts"),
+            pytest.param("release/", id="prefix_slash_only"),
+            pytest.param("release/vabc", id="non_numeric_after_prefix"),
+            pytest.param("rel/v1.2.3", id="abbreviated_prefix"),
         ],
     )
-    def test_init_when_invalid_value_then_error(self, value: str) -> None:
-        with pytest.raises(InvalidReleaseBranchNameError):
-            ReleaseBranchName(value)
+    def test_create_when_invalid_value_then_err(self, value: str) -> None:
+        result = ReleaseBranchName.create(value)
 
-    def test_init_when_valid_value_then_success(self) -> None:
-        branch = ReleaseBranchName("release/v1.2.3")
+        assert result.is_err is True
+        assert isinstance(result.error, InvalidReleaseBranchNameError)
+        assert value in result.error.message.value
 
-        assert branch.value == "release/v1.2.3"
+    def test_create_when_valid_value_then_ok(self) -> None:
+        result = ReleaseBranchName.create("release/v1.2.3")
 
-    def test_value_when_called_then_returns_raw_value(self) -> None:
-        branch = ReleaseBranchName("release/v1.0.0")
+        assert result == Ok(ReleaseBranchName("release/v1.2.3"))
 
-        assert branch.value == "release/v1.0.0"
-
-    def test_from_version_when_valid_version_then_branch_created(self) -> None:
-        version = ReleaseVersion(1, 2, 3)
-
+    @pytest.mark.parametrize(
+        "version, expected",
+        [
+            pytest.param(ReleaseVersion(1, 2, 3), "release/v1.2.3", id="standard"),
+            pytest.param(ReleaseVersion(0, 0, 0), "release/v0.0.0", id="all_zeros"),
+            pytest.param(
+                ReleaseVersion(999, 999, 999),
+                "release/v999.999.999",
+                id="large_components",
+            ),
+            pytest.param(ReleaseVersion(1, 0, 0), "release/v1.0.0", id="only_major"),
+            pytest.param(ReleaseVersion(0, 1, 0), "release/v0.1.0", id="only_minor"),
+            pytest.param(ReleaseVersion(0, 0, 1), "release/v0.0.1", id="only_patch"),
+        ],
+    )
+    def test_from_version_when_version_then_correct_value(
+        self, version: ReleaseVersion, expected: str
+    ) -> None:
         branch = ReleaseBranchName.from_version(version)
 
-        assert branch.value == "release/v1.2.3"
-
-    def test_from_version_when_zero_version_then_branch_created(self) -> None:
-        version = ReleaseVersion(0, 0, 0)
-
-        branch = ReleaseBranchName.from_version(version)
-
-        assert branch.value == "release/v0.0.0"
+        assert branch.value == expected
 
     def test_equality_when_same_value_then_equal(self) -> None:
         assert ReleaseBranchName("release/v1.0.0") == ReleaseBranchName(
@@ -84,7 +101,7 @@ class TestReleaseBranchName:
 
         assert repr(branch) == "ReleaseBranchName('release/v1.0.0')"
 
-    def test_init_when_created_then_cannot_modify_value(self) -> None:
+    def test_setattr_when_frozen_then_raises(self) -> None:
         branch = ReleaseBranchName("release/v1.0.0")
 
         with pytest.raises(CantModifyImmutableAttributeError):

@@ -2,6 +2,7 @@ from enum import StrEnum, auto
 from typing import Hashable, Self
 
 from forging_blocks.domain import ValueObject
+from forging_blocks.foundation import Err, Ok, Result
 from forging_releases.domain.errors import InvalidReleaseLevelError
 
 
@@ -20,10 +21,10 @@ class ReleaseLevel(ValueObject[ReleaseLevelEnum]):
         self._freeze()
 
     @classmethod
-    def from_str(cls, value: str) -> Self:
+    def from_str(cls, value: str) -> Result[Self, InvalidReleaseLevelError]:
         if value.lower() not in ReleaseLevelEnum:
-            raise InvalidReleaseLevelError(value)
-        return cls(ReleaseLevelEnum[value.upper()])
+            return Err(InvalidReleaseLevelError(value))
+        return Ok(cls(ReleaseLevelEnum[value.upper()]))
 
     @property
     def value(self) -> ReleaseLevelEnum:

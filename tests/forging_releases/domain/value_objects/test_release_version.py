@@ -73,12 +73,14 @@ class TestReleaseVersion:
         expected_minor: int,
         expected_patch: int,
     ) -> None:
-        version = ReleaseVersion.from_str(raw_value)
+        result = ReleaseVersion.from_str(raw_value)
 
+        assert result.is_ok is True
+        assert result.value is not None
         assert (
-            version.major,
-            version.minor,
-            version.patch,
+            result.value.major,
+            result.value.minor,
+            result.value.patch,
         ) == (
             expected_major,
             expected_minor,
@@ -96,8 +98,10 @@ class TestReleaseVersion:
         ],
     )
     def test_from_str_when_invalid_then_error(self, raw_value: str) -> None:
-        with pytest.raises(InvalidReleaseVersionError):
-            ReleaseVersion.from_str(raw_value)
+        result = ReleaseVersion.from_str(raw_value)
+
+        assert result.is_err is True
+        assert isinstance(result.error, InvalidReleaseVersionError)
 
     def test_equality_when_same_components_then_equal(self) -> None:
         assert ReleaseVersion(1, 2, 3) == ReleaseVersion(1, 2, 3)

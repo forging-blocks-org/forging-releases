@@ -1,6 +1,7 @@
 from typing import Hashable, Self
 
 from forging_blocks.domain import ValueObject
+from forging_blocks.foundation import Err, Ok, Result
 from forging_releases.domain.errors import InvalidReleaseVersionError
 
 
@@ -19,12 +20,12 @@ class ReleaseVersion(ValueObject[str]):
         self._freeze()
 
     @classmethod
-    def from_str(cls, raw_value: str) -> Self:
+    def from_str(cls, raw_value: str) -> Result[Self, InvalidReleaseVersionError]:
         try:
             major, minor, patch = map(int, raw_value.split("."))
-            return cls(major, minor, patch)
-        except Exception as e:
-            raise InvalidReleaseVersionError(raw_value) from e
+            return Ok(cls(major, minor, patch))
+        except Exception:
+            return Err(InvalidReleaseVersionError(raw_value))
 
     @property
     def value(self) -> str:

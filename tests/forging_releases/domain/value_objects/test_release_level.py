@@ -41,9 +41,11 @@ class TestReleaseLevel:
     def test_from_str_when_valid_then_creates_level(
         self, raw_value: str, expected_value: str
     ) -> None:
-        level = ReleaseLevel.from_str(raw_value)
+        result = ReleaseLevel.from_str(raw_value)
 
-        assert level.value == expected_value
+        assert result.is_ok is True
+        assert result.value is not None
+        assert result.value.value == expected_value
 
     @pytest.mark.parametrize(
         "raw_value",
@@ -55,40 +57,46 @@ class TestReleaseLevel:
         ],
     )
     def test_from_str_when_invalid_then_error(self, raw_value: str) -> None:
-        with pytest.raises(InvalidReleaseLevelError):
-            ReleaseLevel.from_str(raw_value)
+        result = ReleaseLevel.from_str(raw_value)
+
+        assert result.is_err is True
+        assert isinstance(result.error, InvalidReleaseLevelError)
 
     def test_equality_when_same_level_then_equal(self) -> None:
-        assert ReleaseLevel.from_str("PATCH") == ReleaseLevel.from_str("PATCH")
+        assert (
+            ReleaseLevel.from_str("PATCH").value == ReleaseLevel.from_str("PATCH").value
+        )
 
     def test_equality_when_different_level_then_not_equal(self) -> None:
-        assert ReleaseLevel.from_str("PATCH") != ReleaseLevel.from_str("MINOR")
+        assert (
+            ReleaseLevel.from_str("PATCH").value != ReleaseLevel.from_str("MINOR").value
+        )
 
     def test_equality_when_different_type_then_not_equal(self) -> None:
-        assert ReleaseLevel.from_str("PATCH") != "patch"
+        assert ReleaseLevel.from_str("PATCH").value != "patch"
 
     def test_hash_when_same_value_then_same_hash(self) -> None:
-        assert hash(ReleaseLevel.from_str("PATCH")) == hash(
-            ReleaseLevel.from_str("PATCH")
+        assert hash(ReleaseLevel.from_str("PATCH").value) == hash(
+            ReleaseLevel.from_str("PATCH").value
         )
 
     def test_hash_when_different_value_then_different_hash(self) -> None:
-        assert hash(ReleaseLevel.from_str("PATCH")) != hash(
-            ReleaseLevel.from_str("MINOR")
+        assert hash(ReleaseLevel.from_str("PATCH").value) != hash(
+            ReleaseLevel.from_str("MINOR").value
         )
 
     def test_str_when_called_then_returns_representation(self) -> None:
-        level = ReleaseLevel.from_str("PATCH")
+        level = ReleaseLevel.from_str("PATCH").value
 
         assert str(level) == "ReleaseLevel(<ReleaseLevelEnum.PATCH: 'patch'>)"
 
     def test_repr_when_called_then_returns_representation(self) -> None:
-        level = ReleaseLevel.from_str("PATCH")
+        level = ReleaseLevel.from_str("PATCH").value
 
         assert repr(level) == "ReleaseLevel(<ReleaseLevelEnum.PATCH: 'patch'>)"
 
     def test_init_when_created_then_cannot_modify(self) -> None:
-        level = ReleaseLevel.from_str("PATCH")
+        level = ReleaseLevel.from_str("PATCH").value
 
         with pytest.raises(CantModifyImmutableAttributeError):
             level._level = ReleaseLevelEnum.MAJOR  # type: ignore

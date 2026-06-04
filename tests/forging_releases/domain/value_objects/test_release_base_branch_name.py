@@ -28,6 +28,7 @@ class TestReleaseBaseBranchName:
         result = ReleaseBaseBranchName.from_string("release/v0.0.1")
 
         assert result.is_ok is True
+        assert result.value is not None
         assert result.value.value == "release/v0.0.1"
 
     @pytest.mark.parametrize(

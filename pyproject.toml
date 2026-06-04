@@ -8,12 +8,13 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "forging-blocks>=0.3.23",
+    "forging-blocks>=0.4.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
 ]
 
@@ -28,6 +29,10 @@ asyncio_mode = "auto"
 addopts = [
     "--strict-markers",
     "--strict-config",
+    "--cov=forging_releases",
+    "--cov-report=term",
+    "--cov-fail-under=90",
+
 ]
 markers = [
     "unit: mark tests as unit tests",

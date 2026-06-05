@@ -4,9 +4,9 @@ from .release_version import ReleaseVersion
 from .tag_name import TagName
 
 __all__ = [
-    "ReleaseVersion",
+    "ReleaseBranchName",
     "ReleaseLevel",
     "ReleaseLevelEnum",
-    "ReleaseBranchName",
+    "ReleaseVersion",
     "TagName",
 ]

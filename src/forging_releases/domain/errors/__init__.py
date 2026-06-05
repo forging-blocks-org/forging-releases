@@ -6,8 +6,8 @@ from .invalid_tag_name_error import InvalidTagNameError
 
 __all__ = [
     "InvalidReleaseBranchNameError",
-    "InvalidTagNameError",
     "InvalidReleaseLevelError",
-    "InvalidReleaseVersionError",
     "InvalidReleasePullRequestError",
+    "InvalidReleaseVersionError",
+    "InvalidTagNameError",
 ]

@@ -2,11 +2,27 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 
 
+def _make_isolated_env(cwd: str) -> dict[str, str]:
+    return {
+        **os.environ,
+        "HOME": cwd,
+        "GIT_CONFIG_NOSYSTEM": "1",
+    }
+
+
 def run_git(cmd: list[str], cwd: str, *, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=check)
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=check,
+        env=_make_isolated_env(cwd),
+    )
 
 
 def current_branch(repo_dir: str) -> str:

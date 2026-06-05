@@ -12,13 +12,17 @@ import pytest
 
 from forging_releases.domain.value_objects import ReleaseBranchName
 
-_GIT_ENV: dict[str, str] = {
-    "GIT_AUTHOR_NAME": "Test User",
-    "GIT_AUTHOR_EMAIL": "test@example.com",
-    "GIT_COMMITTER_NAME": "Test User",
-    "GIT_COMMITTER_EMAIL": "test@example.com",
-    "GIT_CONFIG_NOSYSTEM": "1",
-}
+
+def _make_git_env(cwd: str) -> dict[str, str]:
+    return {
+        **os.environ,
+        "HOME": cwd,
+        "GIT_CONFIG_NOSYSTEM": "1",
+        "GIT_AUTHOR_NAME": "Test Runner",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test Runner",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+    }
 
 
 def _run(cmd: list[str], cwd: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -28,7 +32,7 @@ def _run(cmd: list[str], cwd: str, check: bool = True) -> subprocess.CompletedPr
         capture_output=True,
         text=True,
         check=check,
-        env={**os.environ, **_GIT_ENV},
+        env=_make_git_env(cwd),
     )
 
 

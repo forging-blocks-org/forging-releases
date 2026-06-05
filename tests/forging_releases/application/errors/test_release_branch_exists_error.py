@@ -1,6 +1,8 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
 
+from forging_blocks.foundation.errors.rule_violation_error import RuleViolationError
+
 from forging_releases.application.errors import ReleaseBranchExistsError
 
 
@@ -19,10 +21,10 @@ class TestReleaseBranchExistsError:
 
         assert error.branch_name == branch_name
 
-    def test_init_when_created_then_is_exception(self) -> None:
+    def test_init_when_created_then_is_rule_violation_error(self) -> None:
         error = ReleaseBranchExistsError("release/v1.0.0")
 
-        assert isinstance(error, Exception)
+        assert isinstance(error, RuleViolationError)
 
     def test_init_when_created_then_is_catchable(self) -> None:
         with pytest.raises(ReleaseBranchExistsError):

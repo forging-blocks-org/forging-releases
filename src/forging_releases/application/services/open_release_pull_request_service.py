@@ -1,5 +1,3 @@
-from typing import cast
-
 from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import InvalidVersionError
@@ -40,9 +38,12 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         request: OpenReleasePullRequestInput,
     ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
         result = self._build_release_pull_request(request)
-        if result.is_err:
-            return Err(cast(InvalidVersionError, result.error))
-        pull_request = cast(ReleasePullRequest, result.value)
+        if isinstance(result, Err):
+            return Err(result.error)
+        if isinstance(result, Ok):
+            pull_request = result.value
+        else:
+            return Err(InvalidVersionError(request.version))
 
         if request.dry_run:
             return Ok(
@@ -66,9 +67,12 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         request: OpenReleasePullRequestInput,
     ) -> Result[ReleasePullRequest, InvalidVersionError]:
         version_result = ReleaseVersion.from_str(request.version)
-        if version_result.is_err:
+        if isinstance(version_result, Err):
             return Err(InvalidVersionError(request.version))
-        release_version = cast(ReleaseVersion, version_result.value)
+        if isinstance(version_result, Ok):
+            release_version = version_result.value
+        else:
+            return Err(InvalidVersionError(request.version))
 
         branch = ReleaseBranchName(request.branch)
 

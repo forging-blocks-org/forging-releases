@@ -1,5 +1,3 @@
-from typing import cast
-
 from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import InvalidReleaseLevelValueError
@@ -57,9 +55,12 @@ class PrepareReleaseService(PrepareReleaseUseCase):
         self, request: PrepareReleaseInput
     ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]:
         level_result = ReleaseLevel.from_str(request.level)
-        if level_result.is_err:
+        if isinstance(level_result, Err):
             return Err(InvalidReleaseLevelValueError(request.level))
-        level = cast(ReleaseLevel, level_result.value)
+        if isinstance(level_result, Ok):
+            level = level_result.value
+        else:
+            return Err(InvalidReleaseLevelValueError(request.level))
 
         current_version = self._versioning_service.current_version()
         next_version = self._versioning_service.compute_next_version(level)

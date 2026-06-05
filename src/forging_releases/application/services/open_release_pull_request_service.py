@@ -37,13 +37,28 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         self,
         request: OpenReleasePullRequestInput,
     ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
-        result = self._build_release_pull_request(request)
-        if isinstance(result, Err):
-            return Err(result.error)
-        if isinstance(result, Ok):
-            pull_request = result.value
-        else:
-            return Err(InvalidVersionError(request.version))
+        match self._build_release_pull_request(request):
+            case Err(error=err):
+                return Err(err)
+            case Ok(value=pull_request):
+                if request.dry_run:
+                    return Ok(
+                        OpenReleasePullRequestOutput(
+                            pr_id=None,
+                            url=None,
+                        )
+                    )
+
+                output = self._pull_request_service.open(pull_request)
+
+                return Ok(
+                    OpenReleasePullRequestOutput(
+                        pr_id=output.pr_id,
+                        url=output.url,
+                    )
+                )
+            case _:
+                return Err(InvalidVersionError(request.version))
 
         if request.dry_run:
             return Ok(
@@ -66,13 +81,23 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         self,
         request: OpenReleasePullRequestInput,
     ) -> Result[ReleasePullRequest, InvalidVersionError]:
-        version_result = ReleaseVersion.from_str(request.version)
-        if isinstance(version_result, Err):
-            return Err(InvalidVersionError(request.version))
-        if isinstance(version_result, Ok):
-            release_version = version_result.value
-        else:
-            return Err(InvalidVersionError(request.version))
+        match ReleaseVersion.from_str(request.version):
+            case Err():
+                return Err(InvalidVersionError(request.version))
+            case Ok(value=release_version):
+                branch = ReleaseBranchName(request.branch)
+
+                return Ok(
+                    ReleasePullRequest.create(
+                        base=ReleaseBaseBranchName("release/v0.0.0"),
+                        head=branch,
+                        title=f"Release v{release_version.value}",
+                        body=f"Automated release pull request for version {release_version.value}.",
+                        external_id=None,
+                    )
+                )
+            case _:
+                return Err(InvalidVersionError(request.version))
 
         branch = ReleaseBranchName(request.branch)
 

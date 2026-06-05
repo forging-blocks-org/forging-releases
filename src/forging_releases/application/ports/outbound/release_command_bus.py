@@ -4,7 +4,7 @@ from forging_blocks.application.ports.inbound.message_handler import CommandHand
 from forging_blocks.application.ports.outbound.message_bus import MessageBus
 from forging_blocks.foundation.messages.command import Command
 
-CommandType = TypeVar("CommandType", bound=Command, contravariant=True)
+CommandType = TypeVar("CommandType", bound=Command[object])
 
 
 class ReleaseCommandBus(MessageBus[CommandType, None], Protocol[CommandType]):
@@ -13,7 +13,9 @@ class ReleaseCommandBus(MessageBus[CommandType, None], Protocol[CommandType]):
     publishes domain command asynchronously.
     """
 
-    async def register(self, command_type: type[Command], handler: CommandHandler) -> None:
+    async def register(
+        self, command_type: type[Command[object]], handler: CommandHandler[CommandType]
+    ) -> None:
         """Register a message handler for a specific message type.
 
         Args:

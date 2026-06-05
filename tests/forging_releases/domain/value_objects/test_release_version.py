@@ -85,16 +85,12 @@ class TestReleaseVersion:
     ) -> None:
         result = ReleaseVersion.from_str(raw_value)
 
-        assert result == Ok(
-            ReleaseVersion(expected_major, expected_minor, expected_patch)
-        )
+        assert result == Ok(ReleaseVersion(expected_major, expected_minor, expected_patch))
         assert result.value is not None
         assert result.value.major == expected_major
         assert result.value.minor == expected_minor
         assert result.value.patch == expected_patch
-        assert (
-            result.value.value == f"{expected_major}.{expected_minor}.{expected_patch}"
-        )
+        assert result.value.value == f"{expected_major}.{expected_minor}.{expected_patch}"
 
     @pytest.mark.parametrize(
         "raw_value",

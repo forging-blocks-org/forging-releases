@@ -80,14 +80,10 @@ class TestReleaseLevel:
         assert raw_value in result.error.message.value
 
     def test_equality_when_same_level_then_equal(self) -> None:
-        assert (
-            ReleaseLevel.from_str("PATCH").value == ReleaseLevel.from_str("PATCH").value
-        )
+        assert ReleaseLevel.from_str("PATCH").value == ReleaseLevel.from_str("PATCH").value
 
     def test_equality_when_different_level_then_not_equal(self) -> None:
-        assert (
-            ReleaseLevel.from_str("PATCH").value != ReleaseLevel.from_str("MINOR").value
-        )
+        assert ReleaseLevel.from_str("PATCH").value != ReleaseLevel.from_str("MINOR").value
 
     def test_equality_when_different_type_then_not_equal(self) -> None:
         assert ReleaseLevel.from_str("PATCH").value != "patch"

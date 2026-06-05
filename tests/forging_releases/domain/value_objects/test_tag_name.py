@@ -93,9 +93,7 @@ class TestTagName:
         [
             pytest.param(ReleaseVersion(1, 2, 3), "v1.2.3", id="standard"),
             pytest.param(ReleaseVersion(0, 0, 0), "v0.0.0", id="all_zeros"),
-            pytest.param(
-                ReleaseVersion(999, 999, 999), "v999.999.999", id="large_components"
-            ),
+            pytest.param(ReleaseVersion(999, 999, 999), "v999.999.999", id="large_components"),
             pytest.param(ReleaseVersion(1, 0, 0), "v1.0.0", id="only_major"),
             pytest.param(ReleaseVersion(0, 1, 0), "v0.1.0", id="only_minor"),
             pytest.param(ReleaseVersion(0, 0, 1), "v0.0.1", id="only_patch"),

@@ -82,14 +82,10 @@ class TestReleaseBranchName:
         assert branch.value == expected
 
     def test_equality_when_same_value_then_equal(self) -> None:
-        assert ReleaseBranchName("release/v1.0.0") == ReleaseBranchName(
-            "release/v1.0.0"
-        )
+        assert ReleaseBranchName("release/v1.0.0") == ReleaseBranchName("release/v1.0.0")
 
     def test_equality_when_different_value_then_not_equal(self) -> None:
-        assert ReleaseBranchName("release/v1.0.0") != ReleaseBranchName(
-            "release/v2.0.0"
-        )
+        assert ReleaseBranchName("release/v1.0.0") != ReleaseBranchName("release/v2.0.0")
 
     def test_equality_when_different_type_then_not_equal(self) -> None:
         assert ReleaseBranchName("release/v1.0.0") != "release/v1.0.0"

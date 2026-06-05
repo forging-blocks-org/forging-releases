@@ -32,9 +32,7 @@ class TestReleaseBaseBranchName:
                 "release/v1.2.3-beta+build",
                 id="semver_with_suffix",
             ),
-            pytest.param(
-                "release/v999.999.999", "release/v999.999.999", id="large_components"
-            ),
+            pytest.param("release/v999.999.999", "release/v999.999.999", id="large_components"),
         ],
     )
     def test_from_string_when_value_starts_with_release_v_then_ok(
@@ -58,9 +56,7 @@ class TestReleaseBaseBranchName:
             pytest.param("Release/v1.0.0", id="uppercase_release"),
         ],
     )
-    def test_from_string_when_value_doesnt_start_with_release_v_then_err(
-        self, value: str
-    ) -> None:
+    def test_from_string_when_value_doesnt_start_with_release_v_then_err(self, value: str) -> None:
         result = ReleaseBaseBranchName.from_string(value)
 
         assert result.is_err is True
@@ -68,14 +64,10 @@ class TestReleaseBaseBranchName:
         assert value in result.error.message.value
 
     def test_equality_when_same_value_then_equal(self) -> None:
-        assert ReleaseBaseBranchName("release/v1.0.0") == ReleaseBaseBranchName(
-            "release/v1.0.0"
-        )
+        assert ReleaseBaseBranchName("release/v1.0.0") == ReleaseBaseBranchName("release/v1.0.0")
 
     def test_equality_when_different_value_then_not_equal(self) -> None:
-        assert ReleaseBaseBranchName("release/v1.0.0") != ReleaseBaseBranchName(
-            "release/v2.0.0"
-        )
+        assert ReleaseBaseBranchName("release/v1.0.0") != ReleaseBaseBranchName("release/v2.0.0")
 
     def test_equality_when_different_type_then_not_equal(self) -> None:
         assert ReleaseBaseBranchName("release/v1.0.0") != "release/v1.0.0"

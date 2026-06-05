@@ -19,9 +19,7 @@ class ReleaseVersion(ValueObject[str]):
         self._freeze()
 
     @classmethod
-    def create(
-        cls, major: int, minor: int, patch: int
-    ) -> Result[Self, InvalidReleaseVersionError]:
+    def create(cls, major: int, minor: int, patch: int) -> Result[Self, InvalidReleaseVersionError]:
         if min(major, minor, patch) < 0:
             return Err(InvalidReleaseVersionError(f"{major}.{minor}.{patch}"))
         return Ok(cls(major, minor, patch))

@@ -54,34 +54,35 @@ class PrepareReleaseService(PrepareReleaseUseCase):
     async def execute(
         self, request: PrepareReleaseInput
     ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]:
-        level_result = ReleaseLevel.from_str(request.level)
-        if level_result.is_err:
-            return Err(InvalidReleaseLevelValueError(request.level))
-        level: ReleaseLevel = level_result.value  # type: ignore[reportArgumentType]
+        match ReleaseLevel.from_str(request.level):
+            case Err():
+                return Err(InvalidReleaseLevelValueError(request.level))
+            case Ok(value=level):
+                current_version = self._versioning_service.current_version()
+                next_version = self._versioning_service.compute_next_version(level)
 
-        current_version = self._versioning_service.current_version()
-        next_version = self._versioning_service.compute_next_version(level)
+                branch = ReleaseBranchName.create(next_version)
+                tag = TagName.create(next_version)
 
-        branch = ReleaseBranchName.create(next_version)
-        tag = TagName.create(next_version)
+                branch_exists = self._version_control.branch_exists(branch)
 
-        branch_exists = self._version_control.branch_exists(branch)
+                context = ReleaseContext(
+                    previous_version=current_version,
+                    version=next_version,
+                    branch=branch,
+                    tag=tag,
+                    branch_exists=branch_exists,
+                    dry_run=request.dry_run,
+                )
 
-        context = ReleaseContext(
-            previous_version=current_version,
-            version=next_version,
-            branch=branch,
-            tag=tag,
-            branch_exists=branch_exists,
-            dry_run=request.dry_run,
-        )
+                changelog_entries = await self._prepare_release_transactionally(context)
 
-        changelog_entries = await self._prepare_release_transactionally(context)
+                if not context.dry_run:
+                    await self._send_command(context)
 
-        if not context.dry_run:
-            await self._send_command(context)
-
-        return Ok(self._make_output(context, changelog_entries))
+                return Ok(self._make_output(context, changelog_entries))
+            case _:  # pragma: no cover - unreachable, Result is either Ok or Err
+                return Err(InvalidReleaseLevelValueError("unreachable"))
 
     def _make_output(
         self, context: ReleaseContext, changelog_entries: list[str]

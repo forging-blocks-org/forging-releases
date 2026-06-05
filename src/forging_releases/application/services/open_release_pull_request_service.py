@@ -36,10 +36,10 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:  # pyright: ignore[reportReturnType]
-        match self._build_release_pull_request(request):  # pyright: ignore[reportMatchNotExhaustive]
+    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
+        match self._build_release_pull_request(request):
             case Err(error=err):
-                return Err(err)  # type: ignore[reportReturnType]
+                return Err(err)
             case Ok(value=pull_request):
                 if request.dry_run:
                     return Ok(
@@ -57,12 +57,14 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
                         url=output.url,
                     )
                 )
+            case _:  # pragma: no cover - unreachable, Result is either Ok or Err
+                return Err(InvalidVersionError("unreachable"))
 
     def _build_release_pull_request(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[ReleasePullRequest, InvalidVersionError]:  # pyright: ignore[reportReturnType]
-        match ReleaseVersion.from_str(request.version):  # pyright: ignore[reportMatchNotExhaustive]
+    ) -> Result[ReleasePullRequest, InvalidVersionError]:
+        match ReleaseVersion.from_str(request.version):
             case Err():
                 return Err(InvalidVersionError(request.version))
             case Ok(value=release_version):
@@ -77,3 +79,5 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
                         external_id=None,
                     )
                 )
+            case _:  # pragma: no cover - unreachable, Result is either Ok or Err
+                return Err(InvalidVersionError(request.version))

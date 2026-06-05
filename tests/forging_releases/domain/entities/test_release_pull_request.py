@@ -6,6 +6,7 @@ import pytest
 from forging_releases.domain.entities import ReleasePullRequest
 from forging_releases.domain.errors import InvalidReleasePullRequestError
 from forging_releases.domain.value_objects import (
+    ReleaseBaseBranchName,
     ReleaseBranchName,
 )
 
@@ -16,14 +17,14 @@ class TestReleasePullRequest:
         head = ReleaseBranchName("release/v1.2.3")
 
         pr = ReleasePullRequest.create(
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=head,
             title="Release v1.2.3",
             body="Release notes",
             external_id=None,
         )
 
-        assert pr.base == "main"
+        assert pr.base == ReleaseBaseBranchName("release/v0.0.0")
         assert pr.head.value == "release/v1.2.3"
         assert pr.title == "Release v1.2.3"
         assert pr.body == "Release notes"
@@ -36,7 +37,7 @@ class TestReleasePullRequest:
 
         pr = ReleasePullRequest(
             id=pr_id,
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=head,
             title="Release v1.2.3",
             body="Release notes",
@@ -44,7 +45,7 @@ class TestReleasePullRequest:
         )
 
         assert pr.id == pr_id
-        assert pr.base == "main"
+        assert pr.base == ReleaseBaseBranchName("release/v0.0.0")
         assert pr.head.value == "release/v1.2.3"
         assert pr.title == "Release v1.2.3"
         assert pr.body == "Release notes"
@@ -53,7 +54,7 @@ class TestReleasePullRequest:
     def test_init_when_external_id_is_none_then_success(self) -> None:
         pr = ReleasePullRequest(
             id=uuid4(),
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="Release v1.0.0",
             body="Notes",
@@ -64,7 +65,7 @@ class TestReleasePullRequest:
 
     def test_create_when_called_then_generates_uuid(self) -> None:
         pr = ReleasePullRequest.create(
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="Release v1.0.0",
             body="Notes",
@@ -75,14 +76,14 @@ class TestReleasePullRequest:
 
     def test_create_when_called_twelve_then_different_ids(self) -> None:
         pr1 = ReleasePullRequest.create(
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="Release v1.0.0",
             body="Notes",
             external_id=None,
         )
         pr2 = ReleasePullRequest.create(
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="Release v1.0.0",
             body="Notes",
@@ -95,7 +96,7 @@ class TestReleasePullRequest:
         pr_id = uuid4()
         pr1 = ReleasePullRequest(
             id=pr_id,
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="t",
             body="b",
@@ -103,7 +104,7 @@ class TestReleasePullRequest:
         )
         pr2 = ReleasePullRequest(
             id=pr_id,
-            base="develop",
+            base=ReleaseBaseBranchName("release/v9.9.9"),
             head=ReleaseBranchName("release/v2.0.0"),
             title="t2",
             body="b2",
@@ -115,7 +116,7 @@ class TestReleasePullRequest:
     def test_equality_when_different_id_then_not_equal(self) -> None:
         pr1 = ReleasePullRequest(
             id=uuid4(),
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="t",
             body="b",
@@ -123,7 +124,7 @@ class TestReleasePullRequest:
         )
         pr2 = ReleasePullRequest(
             id=uuid4(),
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="t",
             body="b",
@@ -134,7 +135,7 @@ class TestReleasePullRequest:
 
     def test_is_persisted_when_created_then_true(self) -> None:
         pr = ReleasePullRequest.create(
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="t",
             body="b",
@@ -147,7 +148,7 @@ class TestReleasePullRequest:
         pr_id = uuid4()
         pr = ReleasePullRequest(
             id=pr_id,
-            base="main",
+            base=ReleaseBaseBranchName("release/v0.0.0"),
             head=ReleaseBranchName("release/v1.0.0"),
             title="t",
             body="b",

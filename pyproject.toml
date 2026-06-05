@@ -4,33 +4,115 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
-    { name = "Glauber Brennon", email = "glauberbrennon@gmail.com" }
+    { name = "ForgingBlocks Org", email = "forging-blocks-org@proton.me" }
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "forging-blocks>=0.3.23",
+    "forging-blocks>=0.4.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.3",
-    "pytest-cov>=7.1.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.11.0",
+    "pyright>=1.1.410",
+]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.4",
 ]
 
-[build-system]
-requires = ["uv_build>=0.9.18,<0.10.0"]
-build-backend = "uv_build"
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+exclude_lines = [
+    "# pragma: no cover",
+    "if TYPE_CHECKING:",
+    "class .*\\(.*Protocol.*\\):",
+    "@abstractmethod",
+    "\\.\\.\\.",
+    "pass",
+    "TypeVar\\(",
+    "Generic\\(",
+    "Protocol\\(",
+]
 
 [tool.pytest.ini_options]
+minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
 addopts = [
     "--strict-markers",
     "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
 ]
 markers = [
     "unit: mark tests as unit tests",
     "integration: mark tests as integration tests",
     "e2e: mark tests as end-to-end tests",
 ]
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src"]
+fix = true
+extend-exclude = [".git", ".venv", "__pycache__", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "SIM",
+    "C4",
+    "RUF",
+]
+
+ignore = [
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "E501",
+    "B011",
+    "N802",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "owned-libs",
+    "first-party",
+]
+
+[tool.ruff.lint.isort.sections]
+"owned-libs" = ["forging_blocks"]
+
+[tool.pyright]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+exclude = ["**/__pycache__", ".venv", "build", "dist"]
+reportMissingTypeStubs = "warning"
+reportUnknownMemberType = "none"

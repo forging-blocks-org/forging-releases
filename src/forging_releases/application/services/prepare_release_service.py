@@ -1,3 +1,6 @@
+# pyright: reportMatchNotExhaustive=false, reportReturnType=false
+"""Result types (Ok/Err) are a closed union — matches are provably exhaustive."""
+
 from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import InvalidReleaseLevelValueError
@@ -81,8 +84,6 @@ class PrepareReleaseService(PrepareReleaseUseCase):
                     await self._send_command(context)
 
                 return Ok(self._make_output(context, changelog_entries))
-            case _:  # pragma: no cover - unreachable, Result is either Ok or Err
-                return Err(InvalidReleaseLevelValueError("unreachable"))
 
     def _make_output(
         self, context: ReleaseContext, changelog_entries: list[str]

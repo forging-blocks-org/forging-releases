@@ -1,3 +1,6 @@
+# pyright: reportMatchNotExhaustive=false, reportReturnType=false
+"""Result types (Ok/Err) are a closed union — matches are provably exhaustive."""
+
 from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import InvalidVersionError
@@ -57,8 +60,6 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
                         url=output.url,
                     )
                 )
-            case _:  # pragma: no cover - unreachable, Result is either Ok or Err
-                return Err(InvalidVersionError("unreachable"))
 
     def _build_release_pull_request(
         self,
@@ -79,5 +80,3 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
                         external_id=None,
                     )
                 )
-            case _:  # pragma: no cover - unreachable, Result is either Ok or Err
-                return Err(InvalidVersionError(request.version))

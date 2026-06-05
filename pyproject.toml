@@ -47,6 +47,8 @@ asyncio_mode = "auto"
 addopts = [
     "--strict-markers",
     "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
 ]
 markers = [
     "unit: mark tests as unit tests",

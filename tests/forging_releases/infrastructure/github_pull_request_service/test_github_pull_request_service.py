@@ -1,7 +1,4 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false, reportOptionalMemberAccess=false
-"""Integration tests for GitHubPullRequestService using a local HTTP test server."""
-
-from __future__ import annotations
 
 import json
 import threading
@@ -18,8 +15,6 @@ from forging_releases.infrastructure.github_pull_request_service import (
 
 
 class _PRHandler(BaseHTTPRequestHandler):
-    """Test HTTP handler that simulates GitHub's PR creation endpoint."""
-
     received_requests: list[dict[str, object]]
 
     def __init__(self, *args: object, **kwargs: object) -> None:
@@ -38,12 +33,11 @@ class _PRHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode("utf-8"))
 
     def log_message(self, format: str, *args: object) -> None:
-        pass  # Suppress logs
+        pass
 
 
 @pytest.fixture
 def test_http_server() -> Generator[str]:
-    """Start a local HTTP server for testing."""
     _PRHandler.received_requests = []
     server = HTTPServer(("127.0.0.1", 0), _PRHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -82,7 +76,6 @@ class TestGitHubPullRequestService:
         assert req_body["head"] == "release/v1.0.0"
 
     def test_when_api_error_then_raises(self) -> None:
-        # Connect to a port where nothing is listening
         svc = GitHubPullRequestService(
             owner="owner",
             repo="repo",

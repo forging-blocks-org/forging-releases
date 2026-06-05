@@ -60,23 +60,6 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
             case _:
                 return Err(InvalidVersionError(request.version))
 
-        if request.dry_run:
-            return Ok(
-                OpenReleasePullRequestOutput(
-                    pr_id=None,
-                    url=None,
-                )
-            )
-
-        output = self._pull_request_service.open(pull_request)
-
-        return Ok(
-            OpenReleasePullRequestOutput(
-                pr_id=output.pr_id,
-                url=output.url,
-            )
-        )
-
     def _build_release_pull_request(
         self,
         request: OpenReleasePullRequestInput,
@@ -98,15 +81,3 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
                 )
             case _:
                 return Err(InvalidVersionError(request.version))
-
-        branch = ReleaseBranchName(request.branch)
-
-        return Ok(
-            ReleasePullRequest.create(
-                base=ReleaseBaseBranchName("release/v0.0.0"),
-                head=branch,
-                title=f"Release v{release_version.value}",
-                body=f"Automated release pull request for version {release_version.value}.",
-                external_id=None,
-            )
-        )

@@ -5,21 +5,21 @@ from uuid import UUID, uuid7
 
 from forging_blocks.domain import Entity
 
-from forging_releases.domain.value_objects import ReleaseBranchName
+from forging_releases.domain.value_objects import ReleaseBaseBranchName, ReleaseBranchName
 
 
 class ReleasePullRequest(Entity[UUID]):
     """Represents the intent to publish a release.
 
     Domain invariants:
-    - base must be "main"
+    - base must be a valid release base branch (enforced by ReleaseBaseBranchName type)
     - head must be a valid release branch (enforced by ReleaseBranchName type)
     """
 
     def __init__(
         self,
         id: UUID,
-        base: str,
+        base: ReleaseBaseBranchName,
         head: ReleaseBranchName,
         title: str,
         body: str,
@@ -35,7 +35,7 @@ class ReleasePullRequest(Entity[UUID]):
     @classmethod
     def create(
         cls,
-        base: str,
+        base: ReleaseBaseBranchName,
         head: ReleaseBranchName,
         title: str,
         body: str,
@@ -46,7 +46,7 @@ class ReleasePullRequest(Entity[UUID]):
         return cls(id, base, head, title, body, external_id)
 
     @property
-    def base(self) -> str:
+    def base(self) -> ReleaseBaseBranchName:
         return self._base
 
     @property

@@ -1,0 +1,17 @@
+from abc import abstractmethod
+
+from forging_blocks.application.ports.outbound.unit_of_work import UnitOfWork
+
+from forging_releases.application.workflow import ReleaseStep
+
+
+class ReleaseTransaction(UnitOfWork):
+    """Coordinates commit / rollback of a release preparation.
+
+    Guarantees:
+    - rollback on any exception
+    - reverse-order compensation
+    """
+
+    @abstractmethod
+    def register_step(self, step: ReleaseStep) -> None: ...

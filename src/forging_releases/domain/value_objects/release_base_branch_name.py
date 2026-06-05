@@ -1,4 +1,6 @@
-from typing import Hashable, Self
+from collections.abc import Hashable
+from typing import Self
+
 from forging_blocks.domain import ValueObject
 from forging_blocks.foundation import Err, Ok, Result
 

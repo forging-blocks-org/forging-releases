@@ -1,6 +1,7 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from forging_releases.domain.entities import ReleasePullRequest
 from forging_releases.domain.errors import InvalidReleasePullRequestError

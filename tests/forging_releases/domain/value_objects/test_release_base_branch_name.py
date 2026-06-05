@@ -1,5 +1,6 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
+
 from forging_blocks.foundation import Ok
 from forging_blocks.foundation.errors.cant_modify_immutable_attribute_error import (
     CantModifyImmutableAttributeError,

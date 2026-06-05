@@ -1,8 +1,10 @@
+from collections.abc import Hashable
 from enum import StrEnum, auto
-from typing import Hashable, Self
+from typing import Self
 
 from forging_blocks.domain import ValueObject
 from forging_blocks.foundation import Err, Ok, Result
+
 from forging_releases.domain.errors import InvalidReleaseLevelError
 
 

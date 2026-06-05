@@ -38,6 +38,7 @@ exclude_lines = [
     "TypeVar\\(",
     "Generic\\(",
     "Protocol\\(",
+    "case _:",
 ]
 
 [tool.pytest.ini_options]

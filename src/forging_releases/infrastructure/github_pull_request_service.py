@@ -1,5 +1,3 @@
-"""GitHub API implementation of the PullRequestService outbound port."""
-
 from __future__ import annotations
 
 import json
@@ -15,12 +13,6 @@ from forging_releases.domain.entities import ReleasePullRequest
 
 
 class GitHubPullRequestService(PullRequestService):
-    """Opens pull requests against a GitHub repository via the REST API.
-
-    Requires GITHUB_TOKEN env var or a token passed at construction.
-    Uses only stdlib (urllib) — no third-party HTTP client needed.
-    """
-
     _API_BASE: str = "https://api.github.com"
 
     def __init__(
@@ -37,7 +29,6 @@ class GitHubPullRequestService(PullRequestService):
         self._base_url = base_url.rstrip("/")
 
     def open(self, pull_request: ReleasePullRequest) -> OpenPullRequestOutput:
-        """Create a pull request via the GitHub API."""
         url = f"{self._base_url}/repos/{self._owner}/{self._repo}/pulls"
         payload = json.dumps(
             {

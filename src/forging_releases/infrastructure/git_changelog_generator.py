@@ -1,5 +1,3 @@
-"""Git log-based implementation of the ChangelogGenerator outbound port."""
-
 from __future__ import annotations
 
 import os
@@ -13,15 +11,12 @@ from forging_releases.application.ports.outbound.changelog_generator import (
 
 
 class GitChangelogGenerator(ChangelogGenerator):
-    """Generate changelogs by extracting git log between versions."""
-
     _DRY_RUN_PREFIX: str = "[dry-run]"
 
     def __init__(self, *, cwd: str | None = None) -> None:
         self._cwd = cwd
 
     async def generate(self, request: ChangelogRequest) -> ChangelogResponse:
-        """Generate changelog entries from git log."""
         if request.dry_run:
             print(f"{self._DRY_RUN_PREFIX} Would generate changelog from {request.from_version}")
             return ChangelogResponse(entries=["[dry-run] changelog entry"])
@@ -30,7 +25,6 @@ class GitChangelogGenerator(ChangelogGenerator):
         return ChangelogResponse(entries=entries)
 
     def _extract_commits(self, from_version: str) -> list[str]:
-        """Run git log and extract conventional commit messages."""
         tag = f"v{from_version}"
         result = self._run_git(
             ["log", f"{tag}..HEAD", "--pretty=format:- %s"],

@@ -1,5 +1,4 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false, reportOptionalMemberAccess=false
-"""Shared fixtures for infrastructure integration tests."""
 
 from __future__ import annotations
 
@@ -35,7 +34,6 @@ def _run(cmd: list[str], cwd: str, check: bool = True) -> subprocess.CompletedPr
 
 @pytest.fixture
 def temp_git_repo() -> Generator[str]:
-    """Create a temporary directory initialized as a git repository."""
     with tempfile.TemporaryDirectory() as base_dir:
         repo_dir = Path(base_dir) / "repo"
         repo_dir.mkdir()
@@ -50,7 +48,6 @@ def temp_git_repo() -> Generator[str]:
 
 @pytest.fixture
 def git_repo_with_remote(temp_git_repo: str) -> Generator[str]:
-    """A git repo with a local bare repository as remote 'origin'."""
     base = Path(temp_git_repo).parent
     bare_dir = base / "bare.git"
     bare_dir.mkdir()
@@ -62,5 +59,4 @@ def git_repo_with_remote(temp_git_repo: str) -> Generator[str]:
 
 @pytest.fixture
 def branch_name() -> ReleaseBranchName:
-    """A standard release branch name for tests."""
     return ReleaseBranchName("release/v1.2.3")

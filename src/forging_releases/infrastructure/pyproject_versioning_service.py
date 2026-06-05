@@ -1,9 +1,3 @@
-"""PyProject-based implementation of the VersioningService outbound port.
-
-Reads/applies versions to pyproject.toml using literal string manipulation.
-No TOML parser dependency needed — version string is a simple key.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,12 +8,6 @@ from forging_releases.domain.value_objects import ReleaseLevel, ReleaseLevelEnum
 
 
 class PyProjectVersioningService(VersioningService):
-    """Read and mutate the version field in pyproject.toml.
-
-    Uses a simple regex-free approach: finds the line starting with 'version ='
-    in the [project] table and replaces the value.
-    """
-
     def __init__(self, *, cwd: str | None = None) -> None:
         self._cwd = cwd
 
@@ -29,7 +17,6 @@ class PyProjectVersioningService(VersioningService):
         return base / "pyproject.toml"
 
     def current_version(self) -> ReleaseVersion:
-        """Read the current version from pyproject.toml."""
         content = self._pyproject_path.read_text()
         version_str = self._extract_version(content)
         result = ReleaseVersion.from_str(version_str)
@@ -38,7 +25,6 @@ class PyProjectVersioningService(VersioningService):
         return cast(ReleaseVersion, result.value)
 
     def compute_next_version(self, level: ReleaseLevel) -> ReleaseVersion:
-        """Compute the next version without mutating state."""
         current = self.current_version()
         match level.value:
             case ReleaseLevelEnum.MAJOR:
@@ -56,7 +42,6 @@ class PyProjectVersioningService(VersioningService):
         *,
         dry_run: bool = False,
     ) -> None:
-        """Mutate the version in pyproject.toml to the given target."""
         if dry_run:
             print(f"[dry-run] Would set version to {version.value} in pyproject.toml")
             return
@@ -66,19 +51,10 @@ class PyProjectVersioningService(VersioningService):
         self._pyproject_path.write_text(new_content)
 
     def rollback_version(self, previous: ReleaseVersion) -> None:
-        """Restore the previously captured version."""
         self.apply_version(previous, dry_run=False)
-
-    # ----------------------------------------------------------------
-    # Internal helpers
-    # ----------------------------------------------------------------
 
     @staticmethod
     def _extract_version(content: str) -> str:
-        """Extract the version string from pyproject.toml content.
-
-        Looks for `version = "X.Y.Z"` under [project].
-        """
         in_project = False
         for line in content.splitlines():
             stripped = line.strip()
@@ -89,7 +65,6 @@ class PyProjectVersioningService(VersioningService):
                 in_project = False
                 continue
             if in_project and stripped.startswith("version"):
-                # Extract quoted value: version = "X.Y.Z"
                 parts = stripped.split("=", 1)
                 if len(parts) == 2:
                     raw = parts[1].strip().strip('"').strip("'")

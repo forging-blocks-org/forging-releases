@@ -1,5 +1,3 @@
-"""In-memory implementation of the ReleaseTransaction outbound port."""
-
 from __future__ import annotations
 
 from typing import Self
@@ -9,25 +7,16 @@ from forging_releases.application.workflow import ReleaseStep
 
 
 class InMemoryReleaseTransaction(ReleaseTransaction):
-    """Coordinates commit/rollback of release preparation steps.
-
-    Guarantees:
-    - rollback on any exception
-    - reverse-order compensation (LIFO)
-    """
-
     def __init__(self) -> None:
         self._steps: list[ReleaseStep] = []
 
     def register_step(self, step: ReleaseStep) -> None:
-        """Register a step with its undo action."""
         self._steps.append(step)
 
     async def commit(self) -> None:
-        """Commit the transaction (no-op in memory)."""
+        pass
 
     async def rollback(self) -> None:
-        """Rollback the transaction by executing undo actions in reverse."""
         for step in reversed(self._steps):
             step.undo()
 

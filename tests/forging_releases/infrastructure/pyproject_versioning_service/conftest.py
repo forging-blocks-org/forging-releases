@@ -1,5 +1,4 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false, reportOptionalMemberAccess=false
-"""Shared fixtures for PyProjectVersioningService integration tests."""
 
 from __future__ import annotations
 
@@ -23,7 +22,6 @@ requires-python = ">=3.14"
 
 @pytest.fixture
 def temp_pyproject_dir() -> Generator[str]:
-    """Create a temp directory with a pyproject.toml file."""
     with tempfile.TemporaryDirectory() as tmpdir:
         pyproject = Path(tmpdir) / "pyproject.toml"
         pyproject.write_text(_PYPROJECT_TEMPLATE)

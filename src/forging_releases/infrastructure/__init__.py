@@ -1,5 +1,3 @@
-"""Infrastructure layer implementations for the forging-releases application."""
-
 from forging_releases.infrastructure.git_changelog_generator import GitChangelogGenerator
 from forging_releases.infrastructure.git_version_control import GitVersionControl
 from forging_releases.infrastructure.github_pull_request_service import (

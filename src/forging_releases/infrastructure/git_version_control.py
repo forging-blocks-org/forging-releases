@@ -1,9 +1,3 @@
-"""Git implementation of the VersionControl outbound port.
-
-Uses subprocess to call git CLI — no GitPython dependency needed.
-All commands are non-interactive (--no-pager, --no-edit, GIT_* env vars).
-"""
-
 from __future__ import annotations
 
 import os
@@ -14,27 +8,14 @@ from forging_releases.domain.value_objects import ReleaseBranchName
 
 
 class GitVersionControl(VersionControl):
-    """Non-interactive git CLI adapter.
-
-    Guarantees:
-    - All commands disable paging, prompting, and interactive editors.
-    - Failures propagate as subprocess.CalledProcessError.
-    - dry_run=True logs the command but does not execute it.
-    """
-
-    _DEFAULT_MAIN_BRANCH: str = "main"
+    _MAIN_BRANCH: str = "main"
     _DRY_RUN_PREFIX: str = "[dry-run]"
 
     def __init__(self, *, cwd: str | None = None, main_branch: str = "main") -> None:
         self._cwd = cwd
         self._main_branch = main_branch
 
-    # ----------------------------------------------------------------
-    # Implementation
-    # ----------------------------------------------------------------
-
     def branch_exists(self, branch: ReleaseBranchName) -> bool:
-        """Check if a local branch exists."""
         result = self._run_git(
             ["rev-parse", "--verify", "--quiet", branch.value],
             check=False,
@@ -47,18 +28,15 @@ class GitVersionControl(VersionControl):
         *,
         dry_run: bool = False,
     ) -> None:
-        """Checkout an existing local branch."""
         self._run_git(
             ["checkout", branch.value],
             dry_run=dry_run,
         )
 
     def checkout_main(self) -> None:
-        """Return to the default branch."""
         self._run_git(["checkout", self._main_branch])
 
     def commit_release_artifacts(self, *, dry_run: bool = False) -> None:
-        """Commit version bump and generated artifacts."""
         self._run_git(
             ["add", "."],
             dry_run=dry_run,
@@ -74,21 +52,18 @@ class GitVersionControl(VersionControl):
         *,
         dry_run: bool = False,
     ) -> None:
-        """Create and checkout a new local branch."""
         self._run_git(
             ["checkout", "-b", branch.value],
             dry_run=dry_run,
         )
 
     def delete_local_branch(self, branch: ReleaseBranchName) -> None:
-        """Delete a local branch if present."""
         self._run_git(
             ["branch", "-D", branch.value],
             check=False,
         )
 
     def delete_remote_branch(self, branch: ReleaseBranchName) -> None:
-        """Delete a remote branch (origin). Non-interactive."""
         self._run_git(
             ["push", "origin", "--delete", branch.value],
             check=False,
@@ -100,7 +75,6 @@ class GitVersionControl(VersionControl):
         *,
         dry_run: bool = False,
     ) -> None:
-        """Push branch and tags to origin."""
         self._run_git(
             ["push", "--set-upstream", "origin", branch.value],
             dry_run=dry_run,
@@ -111,16 +85,11 @@ class GitVersionControl(VersionControl):
         )
 
     def remote_branch_exists(self, branch: ReleaseBranchName) -> bool:
-        """Check if a remote branch exists on origin."""
         result = self._run_git(
             ["ls-remote", "--heads", "origin", branch.value],
             check=False,
         )
         return bool(result.stdout.strip())
-
-    # ----------------------------------------------------------------
-    # Internal helpers
-    # ----------------------------------------------------------------
 
     def _run_git(
         self,
@@ -129,13 +98,6 @@ class GitVersionControl(VersionControl):
         dry_run: bool = False,
         check: bool = True,
     ) -> subprocess.CompletedProcess[str]:
-        """Execute a git command in the configured working directory.
-
-        Args:
-            args: git sub-command arguments (e.g. ["checkout", "main"]).
-            dry_run: If True, only log the command and return a dummy result.
-            check: If True, raise CalledProcessError on non-zero exit.
-        """
         cmd = ["git", *args]
 
         if dry_run:

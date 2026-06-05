@@ -1,5 +1,3 @@
-"""In-memory implementation of the ReleaseCommandBus outbound port."""
-
 from __future__ import annotations
 
 from typing import Protocol
@@ -15,11 +13,6 @@ class _Handler(Protocol):
 
 
 class InMemoryReleaseCommandBus(ReleaseCommandBus[Command[object]]):
-    """Simple in-memory command bus for testing and local use.
-
-    Routes commands to registered handlers synchronously (but async interface).
-    """
-
     def __init__(self) -> None:
         self._handlers: dict[type[Command[object]], _Handler] = {}
 
@@ -36,5 +29,4 @@ class InMemoryReleaseCommandBus(ReleaseCommandBus[Command[object]]):
             await handler.handle(message)
 
     async def dispatch(self, message: Command[object]) -> None:
-        """Dispatch a command (delegates to send)."""
         await self.send(message)

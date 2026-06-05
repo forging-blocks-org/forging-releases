@@ -36,47 +36,44 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
-        pull_request_result = self._build_release_pull_request(request)
-        if pull_request_result.is_err:
-            return Err(pull_request_result.error)  # type: ignore[reportReturnType]
+    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:  # pyright: ignore[reportReturnType]
+        match self._build_release_pull_request(request):  # pyright: ignore[reportMatchNotExhaustive]
+            case Err(error=err):
+                return Err(err)  # type: ignore[reportReturnType]
+            case Ok(value=pull_request):
+                if request.dry_run:
+                    return Ok(
+                        OpenReleasePullRequestOutput(
+                            pr_id=None,
+                            url=None,
+                        )
+                    )
 
-        pull_request: ReleasePullRequest = pull_request_result.value  # type: ignore[reportArgumentType]
+                output = self._pull_request_service.open(pull_request)
 
-        if request.dry_run:
-            return Ok(
-                OpenReleasePullRequestOutput(
-                    pr_id=None,
-                    url=None,
+                return Ok(
+                    OpenReleasePullRequestOutput(
+                        pr_id=output.pr_id,
+                        url=output.url,
+                    )
                 )
-            )
-
-        output = self._pull_request_service.open(pull_request)
-
-        return Ok(
-            OpenReleasePullRequestOutput(
-                pr_id=output.pr_id,
-                url=output.url,
-            )
-        )
 
     def _build_release_pull_request(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[ReleasePullRequest, InvalidVersionError]:
-        version_result = ReleaseVersion.from_str(request.version)
-        if version_result.is_err:
-            return Err(InvalidVersionError(request.version))
-        release_version: ReleaseVersion = version_result.value  # type: ignore[reportArgumentType]
+    ) -> Result[ReleasePullRequest, InvalidVersionError]:  # pyright: ignore[reportReturnType]
+        match ReleaseVersion.from_str(request.version):  # pyright: ignore[reportMatchNotExhaustive]
+            case Err():
+                return Err(InvalidVersionError(request.version))
+            case Ok(value=release_version):
+                branch = ReleaseBranchName(request.branch)
 
-        branch = ReleaseBranchName(request.branch)
-
-        return Ok(
-            ReleasePullRequest.create(
-                base=ReleaseBaseBranchName("release/v0.0.0"),
-                head=branch,
-                title=f"Release v{release_version.value}",
-                body=f"Automated release pull request for version {release_version.value}.",
-                external_id=None,
-            )
-        )
+                return Ok(
+                    ReleasePullRequest.create(
+                        base=ReleaseBaseBranchName("release/v0.0.0"),
+                        head=branch,
+                        title=f"Release v{release_version.value}",
+                        body=f"Automated release pull request for version {release_version.value}.",
+                        external_id=None,
+                    )
+                )

@@ -1,8 +1,6 @@
-from typing import TypeAlias
-
 from forging_blocks.foundation.messages.command import Command
 
-PayloadType: TypeAlias = dict[str, str | bool]
+type PayloadType = dict[str, str | bool]
 
 
 class OpenPullRequestCommand(Command[PayloadType]):

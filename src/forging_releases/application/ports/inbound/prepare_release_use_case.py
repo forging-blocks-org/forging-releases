@@ -66,4 +66,5 @@ class PrepareReleaseUseCase(
     async def execute(
         self,
         request: PrepareReleaseInput,
-    ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]: ...
+    ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]:
+        raise NotImplementedError

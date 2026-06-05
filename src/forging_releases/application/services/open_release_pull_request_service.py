@@ -1,5 +1,4 @@
-# pyright: reportMatchNotExhaustive=false, reportReturnType=false
-"""Result types (Ok/Err) are a closed union — matches are provably exhaustive."""
+from typing import cast
 
 from forging_blocks.foundation import Err, Ok, Result
 
@@ -40,43 +39,45 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         self,
         request: OpenReleasePullRequestInput,
     ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
-        match self._build_release_pull_request(request):
-            case Err(error=err):
-                return Err(err)
-            case Ok(value=pull_request):
-                if request.dry_run:
-                    return Ok(
-                        OpenReleasePullRequestOutput(
-                            pr_id=None,
-                            url=None,
-                        )
-                    )
+        result = self._build_release_pull_request(request)
+        if result.is_err:
+            return Err(cast(InvalidVersionError, result.error))
+        pull_request = cast(ReleasePullRequest, result.value)
 
-                output = self._pull_request_service.open(pull_request)
-
-                return Ok(
-                    OpenReleasePullRequestOutput(
-                        pr_id=output.pr_id,
-                        url=output.url,
-                    )
+        if request.dry_run:
+            return Ok(
+                OpenReleasePullRequestOutput(
+                    pr_id=None,
+                    url=None,
                 )
+            )
+
+        output = self._pull_request_service.open(pull_request)
+
+        return Ok(
+            OpenReleasePullRequestOutput(
+                pr_id=output.pr_id,
+                url=output.url,
+            )
+        )
 
     def _build_release_pull_request(
         self,
         request: OpenReleasePullRequestInput,
     ) -> Result[ReleasePullRequest, InvalidVersionError]:
-        match ReleaseVersion.from_str(request.version):
-            case Err():
-                return Err(InvalidVersionError(request.version))
-            case Ok(value=release_version):
-                branch = ReleaseBranchName(request.branch)
+        version_result = ReleaseVersion.from_str(request.version)
+        if version_result.is_err:
+            return Err(InvalidVersionError(request.version))
+        release_version = cast(ReleaseVersion, version_result.value)
 
-                return Ok(
-                    ReleasePullRequest.create(
-                        base=ReleaseBaseBranchName("release/v0.0.0"),
-                        head=branch,
-                        title=f"Release v{release_version.value}",
-                        body=f"Automated release pull request for version {release_version.value}.",
-                        external_id=None,
-                    )
-                )
+        branch = ReleaseBranchName(request.branch)
+
+        return Ok(
+            ReleasePullRequest.create(
+                base=ReleaseBaseBranchName("release/v0.0.0"),
+                head=branch,
+                title=f"Release v{release_version.value}",
+                body=f"Automated release pull request for version {release_version.value}.",
+                external_id=None,
+            )
+        )

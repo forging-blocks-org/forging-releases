@@ -1,5 +1,4 @@
-# pyright: reportMatchNotExhaustive=false, reportReturnType=false
-"""Result types (Ok/Err) are a closed union — matches are provably exhaustive."""
+from typing import cast
 
 from forging_blocks.foundation import Err, Ok, Result
 
@@ -57,33 +56,34 @@ class PrepareReleaseService(PrepareReleaseUseCase):
     async def execute(
         self, request: PrepareReleaseInput
     ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]:
-        match ReleaseLevel.from_str(request.level):
-            case Err():
-                return Err(InvalidReleaseLevelValueError(request.level))
-            case Ok(value=level):
-                current_version = self._versioning_service.current_version()
-                next_version = self._versioning_service.compute_next_version(level)
+        level_result = ReleaseLevel.from_str(request.level)
+        if level_result.is_err:
+            return Err(InvalidReleaseLevelValueError(request.level))
+        level = cast(ReleaseLevel, level_result.value)
 
-                branch = ReleaseBranchName.create(next_version)
-                tag = TagName.create(next_version)
+        current_version = self._versioning_service.current_version()
+        next_version = self._versioning_service.compute_next_version(level)
 
-                branch_exists = self._version_control.branch_exists(branch)
+        branch = ReleaseBranchName.create(next_version)
+        tag = TagName.create(next_version)
 
-                context = ReleaseContext(
-                    previous_version=current_version,
-                    version=next_version,
-                    branch=branch,
-                    tag=tag,
-                    branch_exists=branch_exists,
-                    dry_run=request.dry_run,
-                )
+        branch_exists = self._version_control.branch_exists(branch)
 
-                changelog_entries = await self._prepare_release_transactionally(context)
+        context = ReleaseContext(
+            previous_version=current_version,
+            version=next_version,
+            branch=branch,
+            tag=tag,
+            branch_exists=branch_exists,
+            dry_run=request.dry_run,
+        )
 
-                if not context.dry_run:
-                    await self._send_command(context)
+        changelog_entries = await self._prepare_release_transactionally(context)
 
-                return Ok(self._make_output(context, changelog_entries))
+        if not context.dry_run:
+            await self._send_command(context)
+
+        return Ok(self._make_output(context, changelog_entries))
 
     def _make_output(
         self, context: ReleaseContext, changelog_entries: list[str]

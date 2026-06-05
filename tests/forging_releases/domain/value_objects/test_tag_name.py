@@ -1,9 +1,11 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
+
 from forging_blocks.foundation import Ok
 from forging_blocks.foundation.errors.cant_modify_immutable_attribute_error import (
     CantModifyImmutableAttributeError,
 )
+
 from forging_releases.domain.errors import InvalidTagNameError
 from forging_releases.domain.value_objects import ReleaseVersion, TagName
 
@@ -25,8 +27,8 @@ class TestTagName:
             pytest.param("v1.2.3 extra", id="trailing_content"),
         ],
     )
-    def test_create_when_invalid_prefix_then_err(self, value: str) -> None:
-        result = TagName.create(value)
+    def test_from_str_when_invalid_prefix_then_err(self, value: str) -> None:
+        result = TagName.from_str(value)
 
         assert result.is_err is True
         assert isinstance(result.error, InvalidTagNameError)
@@ -45,8 +47,8 @@ class TestTagName:
             pytest.param("v.1.2", id="leading_dot_after_prefix"),
         ],
     )
-    def test_create_when_invalid_structure_then_err(self, value: str) -> None:
-        result = TagName.create(value)
+    def test_from_str_when_invalid_structure_then_err(self, value: str) -> None:
+        result = TagName.from_str(value)
 
         assert result.is_err is True
         assert isinstance(result.error, InvalidTagNameError)
@@ -63,17 +65,28 @@ class TestTagName:
             pytest.param("vabc.def.ghi", id="all_non_numeric"),
         ],
     )
-    def test_create_when_invalid_version_then_err(self, value: str) -> None:
-        result = TagName.create(value)
+    def test_from_str_when_invalid_version_then_err(self, value: str) -> None:
+        result = TagName.from_str(value)
 
         assert result.is_err is True
         assert isinstance(result.error, InvalidTagNameError)
         assert value in result.error.message.value
 
-    def test_create_when_valid_value_then_ok(self) -> None:
-        result = TagName.create("v1.2.3")
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param("v1.2.3", id="standard"),
+            pytest.param("v0.0.0", id="all_zeros"),
+            pytest.param("v999.999.999", id="large_components"),
+            pytest.param("v1.0.0", id="only_major"),
+            pytest.param("v0.1.0", id="only_minor"),
+            pytest.param("v0.0.1", id="only_patch"),
+        ],
+    )
+    def test_from_str_when_valid_then_ok(self, value: str) -> None:
+        result = TagName.from_str(value)
 
-        assert result == Ok(TagName("v1.2.3"))
+        assert result == Ok(TagName(value))
 
     @pytest.mark.parametrize(
         "version, expected",
@@ -88,10 +101,10 @@ class TestTagName:
             pytest.param(ReleaseVersion(0, 0, 1), "v0.0.1", id="only_patch"),
         ],
     )
-    def test_for_version_when_version_then_correct_value(
+    def test_create_when_valid_version_then_returns_tag(
         self, version: ReleaseVersion, expected: str
     ) -> None:
-        tag = TagName.for_version(version)
+        tag = TagName.create(version)
 
         assert tag.value == expected
 

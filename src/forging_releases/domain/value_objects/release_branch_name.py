@@ -1,7 +1,9 @@
-from typing import Hashable, Self
+from collections.abc import Hashable
+from typing import Self
 
 from forging_blocks.domain import ValueObject
 from forging_blocks.foundation import Err, Ok, Result
+
 from forging_releases.domain.errors import (
     InvalidReleaseBranchNameError,
 )
@@ -20,30 +22,20 @@ class ReleaseBranchName(ValueObject[str]):
         self._freeze()
 
     @classmethod
-    def create(cls, value: str) -> Result[Self, InvalidReleaseBranchNameError]:
+    def create(cls, version: ReleaseVersion) -> Self:
+        return cls(f"{cls.PREFIX}{version.value}")
+
+    @classmethod
+    def from_str(cls, value: str) -> Result[Self, InvalidReleaseBranchNameError]:
         if not value.startswith(cls.PREFIX):
             return Err(InvalidReleaseBranchNameError(value))
 
         version_part = value[len(cls.PREFIX) :]
-        parts = version_part.split(".")
-
-        if len(parts) != 3:
-            return Err(InvalidReleaseBranchNameError(value))
-
-        try:
-            major, minor, patch = (int(p) for p in parts)
-        except ValueError:
-            return Err(InvalidReleaseBranchNameError(value))
-
-        version_result = ReleaseVersion.create(major, minor, patch)
+        version_result = ReleaseVersion.from_str(version_part)
         if version_result.is_err:
             return Err(InvalidReleaseBranchNameError(value))
 
         return Ok(cls(value))
-
-    @classmethod
-    def from_version(cls, version: ReleaseVersion) -> Self:
-        return cls(f"{cls.PREFIX}{version.value}")
 
     @property
     def value(self) -> str:

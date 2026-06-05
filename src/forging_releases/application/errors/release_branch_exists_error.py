@@ -1,8 +1,8 @@
-"""Error raised when a release branch already exists with the same changes."""
+"""Error returned when a release branch already exists with the same changes."""
 
 
 class ReleaseBranchExistsError(Exception):
-    """Raised when attempting to create a release branch that already exists with same changes."""
+    """Represents an attempt to create a release branch that already exists with no new changes."""
 
     def __init__(self, branch_name: str) -> None:
         self.branch_name = branch_name

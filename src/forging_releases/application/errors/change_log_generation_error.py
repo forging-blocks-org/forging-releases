@@ -3,7 +3,7 @@ from forging_blocks.foundation.errors.rule_violation_error import RuleViolationE
 
 
 class ChangelogGenerationError(RuleViolationError):
-    """Raised when changelog generation fails."""
+    """Represents a failure during changelog generation."""
 
     def __init__(self, details: str) -> None:
         message = ErrorMessage(f"Changelog generation failed: {details}")

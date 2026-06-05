@@ -8,7 +8,7 @@ from forging_releases.application.errors import InvalidReleaseLevelValueError
 
 @pytest.mark.unit
 class TestInvalidReleaseLevelValueError:
-    def test_when_created_then_is_rule_violation_error(self) -> None:
+    def test_init_when_created_then_is_rule_violation_error(self) -> None:
         error = InvalidReleaseLevelValueError("mega")
 
         assert isinstance(error, RuleViolationError)
@@ -22,13 +22,13 @@ class TestInvalidReleaseLevelValueError:
             pytest.param("123", id="numeric"),
         ],
     )
-    def test_when_created_then_message_contains_level(self, level: str) -> None:
+    def test_init_when_created_then_message_contains_level(self, level: str) -> None:
         error = InvalidReleaseLevelValueError(level)
 
         assert level in error.message.value
         assert "Invalid release level" in error.message.value
 
-    def test_when_created_then_is_catchable_as_rule_violation(self) -> None:
+    def test_init_when_created_then_is_catchable_as_rule_violation(self) -> None:
         with pytest.raises(RuleViolationError):
             raise InvalidReleaseLevelValueError("bad")
 

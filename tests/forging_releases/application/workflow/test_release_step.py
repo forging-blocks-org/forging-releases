@@ -8,7 +8,7 @@ from forging_releases.application.workflow import ReleaseStep
 
 @pytest.mark.unit
 class TestReleaseStep:
-    def test_when_created_then_stores_name_and_undo(self) -> None:
+    def test_init_when_created_then_stores_name_and_undo(self) -> None:
         called_with: list[str] = []
 
         def undo_func() -> None:
@@ -19,7 +19,7 @@ class TestReleaseStep:
         assert step.name == "test_step"
         assert step.undo is undo_func
 
-    def test_when_undo_called_then_invokes_callable(self) -> None:
+    def test_undo_when_called_then_invokes_callable(self) -> None:
         called_with: list[str] = []
 
         def undo_func() -> None:
@@ -31,7 +31,7 @@ class TestReleaseStep:
 
         assert called_with == ["undo_called"]
 
-    def test_when_undo_is_lambda_then_works(self) -> None:
+    def test_undo_when_is_lambda_then_works(self) -> None:
         side_effect: list[str] = []
         step = ReleaseStep(
             name="delete_branch",
@@ -42,7 +42,7 @@ class TestReleaseStep:
 
         assert side_effect == ["deleted"]
 
-    def test_when_frozen_then_cannot_modify(self) -> None:
+    def test_init_when_frozen_then_cannot_modify(self) -> None:
         def undo_func() -> None:
             pass
 
@@ -51,7 +51,7 @@ class TestReleaseStep:
         with pytest.raises(FrozenInstanceError):
             step.name = "changed"  # type: ignore[misc]
 
-    def test_equality_when_same_values_then_equal(self) -> None:
+    def test_eq_when_same_values_then_equal(self) -> None:
         def undo_func() -> None:
             pass
 
@@ -60,7 +60,7 @@ class TestReleaseStep:
 
         assert step1 == step2
 
-    def test_equality_when_different_name_then_not_equal(self) -> None:
+    def test_eq_when_different_name_then_not_equal(self) -> None:
         def undo_func() -> None:
             pass
 

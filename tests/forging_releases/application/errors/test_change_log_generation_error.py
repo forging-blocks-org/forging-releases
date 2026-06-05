@@ -8,7 +8,7 @@ from forging_releases.application.errors import ChangelogGenerationError
 
 @pytest.mark.unit
 class TestChangelogGenerationError:
-    def test_when_created_then_is_rule_violation_error(self) -> None:
+    def test_init_when_created_then_is_rule_violation_error(self) -> None:
         error = ChangelogGenerationError("something went wrong")
 
         assert isinstance(error, RuleViolationError)
@@ -21,13 +21,13 @@ class TestChangelogGenerationError:
             pytest.param("invalid range", id="invalid_range"),
         ],
     )
-    def test_when_created_then_message_contains_details(self, details: str) -> None:
+    def test_init_when_created_then_message_contains_details(self, details: str) -> None:
         error = ChangelogGenerationError(details)
 
         assert details in error.message.value
         assert "Changelog generation failed" in error.message.value
 
-    def test_when_created_then_is_catchable_as_rule_violation(self) -> None:
+    def test_init_when_created_then_is_catchable_as_rule_violation(self) -> None:
         with pytest.raises(RuleViolationError):
             raise ChangelogGenerationError("test")
 

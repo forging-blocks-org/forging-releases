@@ -8,7 +8,7 @@ from forging_releases.application.errors import InvalidVersionError
 
 @pytest.mark.unit
 class TestInvalidVersionError:
-    def test_when_created_then_is_rule_violation_error(self) -> None:
+    def test_init_when_created_then_is_rule_violation_error(self) -> None:
         error = InvalidVersionError("bad.version")
 
         assert isinstance(error, RuleViolationError)
@@ -22,13 +22,13 @@ class TestInvalidVersionError:
             pytest.param("v1.2.3", id="with_prefix"),
         ],
     )
-    def test_when_created_then_message_contains_version(self, version: str) -> None:
+    def test_init_when_created_then_message_contains_version(self, version: str) -> None:
         error = InvalidVersionError(version)
 
         assert version in error.message.value
         assert "Invalid version format" in error.message.value
 
-    def test_when_created_then_is_catchable_as_rule_violation(self) -> None:
+    def test_init_when_created_then_is_catchable_as_rule_violation(self) -> None:
         with pytest.raises(RuleViolationError):
             raise InvalidVersionError("bad")
 

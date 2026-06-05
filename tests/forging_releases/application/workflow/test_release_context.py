@@ -13,7 +13,7 @@ from forging_releases.domain.value_objects import (
 
 @pytest.mark.unit
 class TestReleaseContext:
-    def test_when_created_then_stores_all_fields(self) -> None:
+    def test_init_when_created_then_stores_all_fields(self) -> None:
         version = ReleaseVersion(1, 2, 3)
         previous_version = ReleaseVersion(1, 2, 2)
         branch = ReleaseBranchName("release/v1.2.3")
@@ -35,7 +35,7 @@ class TestReleaseContext:
         assert context.branch_exists is True
         assert context.dry_run is False
 
-    def test_when_dry_run_then_stored(self) -> None:
+    def test_init_when_dry_run_then_stored(self) -> None:
         version = ReleaseVersion(1, 0, 0)
         previous_version = ReleaseVersion(0, 9, 9)
         branch = ReleaseBranchName("release/v1.0.0")
@@ -53,7 +53,7 @@ class TestReleaseContext:
         assert context.dry_run is True
         assert context.branch_exists is False
 
-    def test_when_branch_exists_then_flag_true(self) -> None:
+    def test_init_when_branch_exists_then_flag_true(self) -> None:
         version = ReleaseVersion(2, 0, 0)
         previous_version = ReleaseVersion(1, 9, 9)
         branch = ReleaseBranchName("release/v2.0.0")
@@ -70,7 +70,7 @@ class TestReleaseContext:
 
         assert context.branch_exists is True
 
-    def test_when_frozen_then_cannot_modify(self) -> None:
+    def test_init_when_frozen_then_cannot_modify(self) -> None:
         version = ReleaseVersion(1, 0, 0)
         previous_version = ReleaseVersion(0, 9, 9)
         branch = ReleaseBranchName("release/v1.0.0")
@@ -88,7 +88,7 @@ class TestReleaseContext:
         with pytest.raises(FrozenInstanceError):
             context.dry_run = True  # type: ignore[misc]
 
-    def test_equality_when_same_values_then_equal(self) -> None:
+    def test_eq_when_same_values_then_equal(self) -> None:
         version = ReleaseVersion(1, 0, 0)
         previous_version = ReleaseVersion(0, 9, 9)
         branch = ReleaseBranchName("release/v1.0.0")
@@ -113,7 +113,7 @@ class TestReleaseContext:
 
         assert ctx1 == ctx2
 
-    def test_equality_when_different_dry_run_then_not_equal(self) -> None:
+    def test_eq_when_different_dry_run_then_not_equal(self) -> None:
         version = ReleaseVersion(1, 0, 0)
         previous_version = ReleaseVersion(0, 9, 9)
         branch = ReleaseBranchName("release/v1.0.0")

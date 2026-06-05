@@ -18,7 +18,7 @@ from forging_releases.application.services.open_release_pull_request_service imp
 
 @pytest.mark.unit
 class TestOpenReleasePullRequestService:
-    async def test_when_dry_run_then_returns_empty_output(self) -> None:
+    async def test_execute_when_dry_run_then_returns_empty_output(self) -> None:
         pull_request_service = Mock(spec=PullRequestService)
         service = OpenReleasePullRequestService(
             pull_request_service=pull_request_service,
@@ -35,7 +35,7 @@ class TestOpenReleasePullRequestService:
         assert result.value.url is None
         pull_request_service.open.assert_not_called()
 
-    async def test_when_not_dry_run_then_calls_pull_request_service(self) -> None:
+    async def test_execute_when_not_dry_run_then_calls_pull_request_service(self) -> None:
         mock_output = OpenPullRequestOutput(pr_id="42", url="https://github.com/org/repo/pull/42")
         pull_request_service = Mock(spec=PullRequestService)
         pull_request_service.open.return_value = mock_output
@@ -54,7 +54,7 @@ class TestOpenReleasePullRequestService:
         assert result.value.url == "https://github.com/org/repo/pull/42"
         pull_request_service.open.assert_called_once()
 
-    async def test_when_pull_request_service_returns_none_ids_then_mapped(self) -> None:
+    async def test_execute_when_pull_request_service_returns_none_ids_then_mapped(self) -> None:
         mock_output = OpenPullRequestOutput(pr_id=None, url=None)
         pull_request_service = Mock(spec=PullRequestService)
         pull_request_service.open.return_value = mock_output
@@ -72,7 +72,7 @@ class TestOpenReleasePullRequestService:
         assert result.value.pr_id is None
         assert result.value.url is None
 
-    async def test_when_invalid_version_then_returns_err(self) -> None:
+    async def test_execute_when_invalid_version_then_returns_err(self) -> None:
         pull_request_service = Mock(spec=PullRequestService)
         service = OpenReleasePullRequestService(
             pull_request_service=pull_request_service,

@@ -49,7 +49,7 @@ def _make_message_bus_mock() -> Mock:
 class TestPrepareReleaseServiceDryRun:
     """Tests for the dry_run=True path."""
 
-    async def test_when_dry_run_then_returns_ok_with_output(self) -> None:
+    async def test_execute_when_dry_run_then_returns_ok_with_output(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -85,7 +85,7 @@ class TestPrepareReleaseServiceDryRun:
         assert result.value.changelog_entries == ["- feat: something"]
         message_bus.send.assert_not_called()
 
-    async def test_when_dry_run_branch_exists_then_checkout_not_create(self) -> None:
+    async def test_execute_when_dry_run_branch_exists_then_checkout_not_create(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -119,7 +119,7 @@ class TestPrepareReleaseServiceDryRun:
 
 @pytest.mark.unit
 class TestPrepareReleaseServiceNormal:
-    async def test_when_new_branch_then_creates_and_pushes(self) -> None:
+    async def test_execute_when_new_branch_then_creates_and_pushes(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -153,7 +153,7 @@ class TestPrepareReleaseServiceNormal:
         version_control.push.assert_called_once_with(branch)
         message_bus.send.assert_called_once()
 
-    async def test_when_branch_exists_then_checkout_and_push(self) -> None:
+    async def test_execute_when_branch_exists_then_checkout_and_push(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -178,7 +178,7 @@ class TestPrepareReleaseServiceNormal:
         version_control.checkout.assert_called_once_with(branch, dry_run=False)
         version_control.create_branch.assert_not_called()
 
-    async def test_when_not_dry_run_then_commits_artifacts(self) -> None:
+    async def test_execute_when_not_dry_run_then_commits_artifacts(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -204,7 +204,7 @@ class TestPrepareReleaseServiceNormal:
 
 @pytest.mark.unit
 class TestPrepareReleaseServiceValueComputation:
-    async def test_when_patch_level_then_computes_patch_bump(self) -> None:
+    async def test_execute_when_patch_level_then_computes_patch_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -228,7 +228,7 @@ class TestPrepareReleaseServiceValueComputation:
         assert result.is_ok is True
         assert result.value.version == "1.2.4"
 
-    async def test_when_major_level_then_computes_major_bump(self) -> None:
+    async def test_execute_when_major_level_then_computes_major_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -252,7 +252,7 @@ class TestPrepareReleaseServiceValueComputation:
         assert result.is_ok is True
         assert result.value.version == "2.0.0"
 
-    async def test_when_minor_level_then_computes_minor_bump(self) -> None:
+    async def test_execute_when_minor_level_then_computes_minor_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()
@@ -279,7 +279,7 @@ class TestPrepareReleaseServiceValueComputation:
 
 @pytest.mark.unit
 class TestPrepareReleaseServiceErrorPath:
-    async def test_when_invalid_release_level_then_returns_err(self) -> None:
+    async def test_execute_when_invalid_release_level_then_returns_err(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         transaction = _make_transaction_mock()

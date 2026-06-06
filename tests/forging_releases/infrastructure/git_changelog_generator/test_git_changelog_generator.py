@@ -1,41 +1,22 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false, reportOptionalMemberAccess=false
 
-import os
-import subprocess
 from pathlib import Path
 
 import pytest
+from ..conftest import _run_git
 
 from forging_releases.application.ports.outbound.changelog_generator import ChangelogRequest
 from forging_releases.infrastructure.git_changelog_generator import GitChangelogGenerator
 
 
-def _isolated_env(cwd: str) -> dict[str, str]:
-    return {
-        **os.environ,
-        "HOME": cwd,
-        "GIT_CONFIG_NOSYSTEM": "1",
-        "GIT_AUTHOR_NAME": "Test",
-        "GIT_AUTHOR_EMAIL": "test@test.com",
-        "GIT_COMMITTER_NAME": "Test",
-        "GIT_COMMITTER_EMAIL": "test@test.com",
-    }
-
-
-def _run(cmd: list[str], cwd: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd, cwd=cwd, capture_output=True, text=True, check=check, env=_isolated_env(cwd)
-    )
-
-
 def _make_commit(repo_dir: str, message: str) -> None:
     (Path(repo_dir) / "file.txt").write_text(message)
-    _run(["git", "add", "."], repo_dir)
-    _run(["git", "commit", "--no-verify", "-m", message], repo_dir)
+    _run_git(["git", "add", "."], repo_dir)
+    _run_git(["git", "commit", "--no-verify", "-m", message], repo_dir)
 
 
 def _make_tag(repo_dir: str, tag: str) -> None:
-    _run(["git", "tag", tag], repo_dir)
+    _run_git(["git", "tag", tag], repo_dir)
 
 
 @pytest.mark.integration

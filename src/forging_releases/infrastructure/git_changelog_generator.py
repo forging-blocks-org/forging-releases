@@ -40,11 +40,12 @@ class GitChangelogGenerator(ChangelogGenerator):
         *,
         check: bool = True,
     ) -> subprocess.CompletedProcess[str]:
+        clean_env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
         return subprocess.run(
             ["git", *args],
             cwd=self._cwd,
             capture_output=True,
             text=True,
             check=check,
-            env={**os.environ, "GIT_CONFIG_NOSYSTEM": "1"},
+            env={**clean_env, "GIT_CONFIG_NOSYSTEM": "1"},
         )

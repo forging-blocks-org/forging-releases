@@ -109,8 +109,9 @@ class GitVersionControl(VersionControl):
                 stderr="",
             )
 
+        clean_env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
         env = {
-            **os.environ,
+            **clean_env,
             "GIT_PAGER": "cat",
             "GIT_EDITOR": "true",
             "GIT_TERMINAL_PROMPT": "0",

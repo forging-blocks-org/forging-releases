@@ -14,8 +14,11 @@ from forging_releases.domain.value_objects import ReleaseBranchName
 
 
 def _make_git_env(cwd: str) -> dict[str, str]:
+    # Strip GIT_* env vars (pre-commit sets GIT_DIR, GIT_INDEX_FILE, etc
+    # during commit hooks, which would redirect git to the project repo)
+    clean_env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     return {
-        **os.environ,
+        **clean_env,
         "HOME": cwd,
         "GIT_CONFIG_NOSYSTEM": "1",
         "GIT_AUTHOR_NAME": "Test Runner",
@@ -25,7 +28,7 @@ def _make_git_env(cwd: str) -> dict[str, str]:
     }
 
 
-def _run(cmd: list[str], cwd: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+def _run_git(cmd: list[str], cwd: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         cmd,
         cwd=cwd,
@@ -41,12 +44,12 @@ def temp_git_repo() -> Generator[str]:
     with tempfile.TemporaryDirectory() as base_dir:
         repo_dir = Path(base_dir) / "repo"
         repo_dir.mkdir()
-        _run(["git", "init", "-b", "main"], str(repo_dir))
-        _run(["git", "config", "user.email", "test@example.com"], str(repo_dir))
-        _run(["git", "config", "user.name", "Test User"], str(repo_dir))
+        _run_git(["git", "init", "-b", "main"], str(repo_dir))
+        _run_git(["git", "config", "user.email", "test@example.com"], str(repo_dir))
+        _run_git(["git", "config", "user.name", "Test User"], str(repo_dir))
         (repo_dir / "README.md").write_text("# Test Repo\n")
-        _run(["git", "add", "."], str(repo_dir))
-        _run(["git", "commit", "--no-verify", "-m", "initial commit"], str(repo_dir))
+        _run_git(["git", "add", "."], str(repo_dir))
+        _run_git(["git", "commit", "--no-verify", "-m", "initial commit"], str(repo_dir))
         yield str(repo_dir)
 
 
@@ -55,9 +58,9 @@ def git_repo_with_remote(temp_git_repo: str) -> Generator[str]:
     base = Path(temp_git_repo).parent
     bare_dir = base / "bare.git"
     bare_dir.mkdir()
-    _run(["git", "init", "--bare"], str(bare_dir))
-    _run(["git", "remote", "add", "origin", str(bare_dir)], temp_git_repo)
-    _run(["git", "push", "--set-upstream", "origin", "main"], temp_git_repo)
+    _run_git(["git", "init", "--bare"], str(bare_dir))
+    _run_git(["git", "remote", "add", "origin", str(bare_dir)], temp_git_repo)
+    _run_git(["git", "push", "--set-upstream", "origin", "main"], temp_git_repo)
     yield temp_git_repo
 
 

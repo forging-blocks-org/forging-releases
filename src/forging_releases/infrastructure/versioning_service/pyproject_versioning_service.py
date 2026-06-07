@@ -48,11 +48,13 @@ class PyProjectVersioningService(VersioningService):
             case _:
                 pass
 
-        match self._VERSION_PATTERN.search(content):
-            case None:
-                return Err(VersionNotFoundError("version key not found in pyproject.toml"))
-            case match:
-                version_str = match.group(1)
+        match self._extract_version(content):
+            case Err(error=err):
+                return Err(err)
+            case Ok(value=version_str):
+                pass
+            case _:
+                return Err(VersionNotFoundError("unknown error extracting version"))
 
         match ReleaseVersion.from_str(version_str):
             case Err():
@@ -157,8 +159,9 @@ class PyProjectVersioningService(VersioningService):
         return Path(self._cwd or ".") / "pyproject.toml"
 
     @classmethod
-    def _extract_version(cls, content: str) -> str:
-        match = cls._VERSION_PATTERN.search(content)
-        if not match:
-            return ""
-        return match.group(1)
+    def _extract_version(cls, content: str) -> Result[str, VersionNotFoundError]:
+        match cls._VERSION_PATTERN.search(content):
+            case None:
+                return Err(VersionNotFoundError("version key not found in pyproject.toml"))
+            case m:
+                return Ok(m.group(1))

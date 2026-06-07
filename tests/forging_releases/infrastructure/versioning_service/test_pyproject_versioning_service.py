@@ -4,7 +4,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-from .conftest import read_version
 
 from forging_blocks.foundation import Ok
 
@@ -79,7 +78,9 @@ class TestPyProjectVersioningService:
         result = svc.apply_version(new_version)
 
         assert result.is_ok is True
-        assert read_version(str(Path(temp_pyproject_dir) / "pyproject.toml")) == "2.0.0"
+        version_result = svc.current_version()
+        assert version_result.is_ok is True
+        assert version_result.value == new_version
 
     def test_apply_version_when_dry_run_then_pyproject_not_modified(
         self, temp_pyproject_dir: str
@@ -90,7 +91,11 @@ class TestPyProjectVersioningService:
         result = svc.apply_version(new_version, dry_run=True)
 
         assert result.is_ok is True
-        assert read_version(str(Path(temp_pyproject_dir) / "pyproject.toml")) == "1.2.3"
+
+        version_result = svc.current_version()
+        assert version_result.is_ok is True
+        assert version_result.value is not None
+        assert version_result.value.value == "1.2.3"
 
     def test_apply_version_when_applied_multiple_times_then_correct_version(
         self, temp_pyproject_dir: str

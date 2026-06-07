@@ -8,10 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from forging_releases.infrastructure.versioning_service.pyproject_versioning_service import (
-    PyProjectVersioningService,
-)
-
 _PYPROJECT_TEMPLATE = """[project]
 name = "test-project"
 version = "1.2.3"
@@ -26,8 +22,3 @@ def temp_pyproject_dir() -> Generator[str]:
         pyproject = Path(tmpdir) / "pyproject.toml"
         pyproject.write_text(_PYPROJECT_TEMPLATE)
         yield tmpdir
-
-
-def read_version(pyproject_path: str) -> str:
-    content = Path(pyproject_path).read_text()
-    return PyProjectVersioningService._extract_version(content)

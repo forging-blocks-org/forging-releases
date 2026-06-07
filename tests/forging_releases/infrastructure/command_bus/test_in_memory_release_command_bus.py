@@ -5,7 +5,7 @@ import pytest
 from forging_blocks.application.ports.inbound.message_handler import CommandHandler
 from forging_blocks.foundation.messages.command import Command
 
-from forging_releases.infrastructure.command_bus.command_bus import (
+from forging_releases.infrastructure.command_bus.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
 )
 

@@ -1,4 +1,4 @@
-from forging_releases.infrastructure.changelog_generator.changelog_generator import (
+from forging_releases.infrastructure.changelog_generator.git_changelog_generator import (
     GitChangelogGenerator,
 )
 

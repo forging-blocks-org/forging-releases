@@ -1,4 +1,4 @@
-from forging_releases.infrastructure.version_control.version_control import (
+from forging_releases.infrastructure.version_control.git_version_control import (
     GitVersionControl,
 )
 

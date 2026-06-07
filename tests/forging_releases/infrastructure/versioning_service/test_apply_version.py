@@ -6,7 +6,7 @@ import pytest
 from .conftest import read_version
 
 from forging_releases.domain.value_objects import ReleaseVersion
-from forging_releases.infrastructure.versioning_service.versioning_service import (
+from forging_releases.infrastructure.versioning_service.pyproject_versioning_service import (
     PyProjectVersioningService,
 )
 

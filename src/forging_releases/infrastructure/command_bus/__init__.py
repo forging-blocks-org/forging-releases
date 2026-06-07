@@ -1,4 +1,4 @@
-from forging_releases.infrastructure.command_bus.command_bus import (
+from forging_releases.infrastructure.command_bus.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
 )
 

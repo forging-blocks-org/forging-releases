@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from forging_blocks.foundation.messages.command import Command
-
 from forging_releases.application.ports.inbound import (
     OpenReleasePullRequestUseCase,
     PrepareReleaseUseCase,
@@ -21,23 +19,25 @@ from forging_releases.application.services.prepare_release_service import (
     PrepareReleaseService,
 )
 from forging_releases.domain.commands import OpenPullRequestCommand
-from forging_releases.infrastructure.changelog_generator.changelog_generator import (
+from forging_releases.infrastructure.changelog_generator.git_changelog_generator import (
     GitChangelogGenerator,
 )
-from forging_releases.infrastructure.command_bus.command_bus import (
+from forging_releases.infrastructure.command_bus.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
 )
-from forging_releases.infrastructure.handler.handler import OpenPullRequestHandler
-from forging_releases.infrastructure.pull_request_service.pull_request_service import (
+from forging_releases.infrastructure.handler.open_pull_request_handler import (
+    OpenPullRequestHandler,
+)
+from forging_releases.infrastructure.pull_request_service.github_pull_request_service import (
     GitHubPullRequestService,
 )
-from forging_releases.infrastructure.release_transaction.release_transaction import (
+from forging_releases.infrastructure.release_transaction.in_memory_release_transaction import (
     InMemoryReleaseTransaction,
 )
-from forging_releases.infrastructure.version_control.version_control import (
+from forging_releases.infrastructure.version_control.git_version_control import (
     GitVersionControl,
 )
-from forging_releases.infrastructure.versioning_service.versioning_service import (
+from forging_releases.infrastructure.versioning_service.pyproject_versioning_service import (
     PyProjectVersioningService,
 )
 
@@ -63,7 +63,7 @@ class Container:
         self._versioning_service: VersioningService | None = None
         self._version_control: VersionControl | None = None
         self._transaction: ReleaseTransaction | None = None
-        self._message_bus: ReleaseCommandBus[Command[object]] | None = None
+        self._message_bus: ReleaseCommandBus[OpenPullRequestCommand] | None = None
         self._changelog_generator: ChangelogGenerator | None = None
         self._pull_request_service: PullRequestService | None = None
         self._prepare_use_case: PrepareReleaseUseCase | None = None
@@ -75,7 +75,7 @@ class Container:
                 versioning_service=self._resolve_versioning_service(),
                 version_control=self._resolve_version_control(),
                 transaction=self._resolve_transaction(),
-                message_bus=self._resolve_message_bus(),  # type: ignore[arg-type]
+                message_bus=self._resolve_message_bus(),
                 changelog_generator=self._resolve_changelog_generator(),
             )
         return self._prepare_use_case
@@ -95,7 +95,7 @@ class Container:
             use_case=self.get_open_release_pull_request_use_case(),
         )
         bus = self._resolve_message_bus()
-        await bus.register(OpenPullRequestCommand, handler)  # type: ignore[arg-type]
+        await bus.register(OpenPullRequestCommand, handler)
 
     def _resolve_versioning_service(self) -> VersioningService:
         if self._versioning_service is None:
@@ -115,9 +115,9 @@ class Container:
             self._transaction = InMemoryReleaseTransaction()
         return self._transaction
 
-    def _resolve_message_bus(self) -> ReleaseCommandBus[Command[object]]:
+    def _resolve_message_bus(self) -> ReleaseCommandBus[OpenPullRequestCommand]:
         if self._message_bus is None:
-            self._message_bus = InMemoryReleaseCommandBus()
+            self._message_bus = InMemoryReleaseCommandBus[OpenPullRequestCommand]()
         return self._message_bus
 
     def _resolve_changelog_generator(self) -> ChangelogGenerator:

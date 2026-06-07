@@ -3,7 +3,7 @@
 import pytest
 
 from forging_releases.domain.value_objects import ReleaseBranchName
-from forging_releases.infrastructure.version_control.version_control import GitVersionControl
+from forging_releases.infrastructure.version_control.git_version_control import GitVersionControl
 
 
 @pytest.mark.integration

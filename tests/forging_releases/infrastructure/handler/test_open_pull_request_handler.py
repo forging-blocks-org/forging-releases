@@ -14,10 +14,10 @@ from forging_releases.application.services.open_release_pull_request_service imp
     OpenReleasePullRequestService,
 )
 from forging_releases.domain.commands import OpenPullRequestCommand
-from forging_releases.infrastructure.handler.handler import (
+from forging_releases.infrastructure.handler.open_pull_request_handler import (
     OpenPullRequestHandler,
 )
-from forging_releases.infrastructure.pull_request_service.pull_request_service import (
+from forging_releases.infrastructure.pull_request_service.github_pull_request_service import (
     GitHubPullRequestService,
 )
 

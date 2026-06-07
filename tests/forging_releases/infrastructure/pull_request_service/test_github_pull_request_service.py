@@ -9,7 +9,7 @@ import pytest
 
 from forging_releases.domain.entities import ReleasePullRequest
 from forging_releases.domain.value_objects import ReleaseBaseBranchName, ReleaseBranchName
-from forging_releases.infrastructure.pull_request_service.pull_request_service import (
+from forging_releases.infrastructure.pull_request_service.github_pull_request_service import (
     GitHubPullRequestService,
 )
 

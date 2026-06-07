@@ -1,4 +1,4 @@
-from forging_releases.infrastructure.command_runner.command_runner import (
+from forging_releases.infrastructure.command_runner.subprocess_command_runner import (
     SubprocessCommandRunner,
 )
 

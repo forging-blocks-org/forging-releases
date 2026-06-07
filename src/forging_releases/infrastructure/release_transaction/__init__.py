@@ -1,4 +1,4 @@
-from forging_releases.infrastructure.release_transaction.release_transaction import (
+from forging_releases.infrastructure.release_transaction.in_memory_release_transaction import (
     InMemoryReleaseTransaction,
 )
 

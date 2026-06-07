@@ -8,18 +8,18 @@ from forging_releases.application.ports.inbound import (
     OpenReleasePullRequestUseCase,
     PrepareReleaseUseCase,
 )
-from forging_releases.infrastructure.changelog_generator.changelog_generator import (
+from forging_releases.infrastructure.changelog_generator.git_changelog_generator import (
     GitChangelogGenerator,
 )
-from forging_releases.infrastructure.command_bus.command_bus import (
+from forging_releases.infrastructure.command_bus.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
 )
 from forging_releases.infrastructure.container import Container
-from forging_releases.infrastructure.release_transaction.release_transaction import (
+from forging_releases.infrastructure.release_transaction.in_memory_release_transaction import (
     InMemoryReleaseTransaction,
 )
-from forging_releases.infrastructure.version_control.version_control import GitVersionControl
-from forging_releases.infrastructure.versioning_service.versioning_service import (
+from forging_releases.infrastructure.version_control.git_version_control import GitVersionControl
+from forging_releases.infrastructure.versioning_service.pyproject_versioning_service import (
     PyProjectVersioningService,
 )
 

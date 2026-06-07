@@ -3,7 +3,7 @@
 import pytest
 
 from forging_releases.domain.value_objects import ReleaseLevel, ReleaseLevelEnum, ReleaseVersion
-from forging_releases.infrastructure.versioning_service.versioning_service import (
+from forging_releases.infrastructure.versioning_service.pyproject_versioning_service import (
     PyProjectVersioningService,
 )
 

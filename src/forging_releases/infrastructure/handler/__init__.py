@@ -1,4 +1,6 @@
-from forging_releases.infrastructure.handler.handler import OpenPullRequestHandler
+from forging_releases.infrastructure.handler.open_pull_request_handler import (
+    OpenPullRequestHandler,
+)
 
 __all__ = [
     "OpenPullRequestHandler",

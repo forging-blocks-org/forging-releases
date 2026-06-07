@@ -6,7 +6,7 @@ import pytest
 from ..conftest import _run_git
 
 from forging_releases.application.ports.outbound.changelog_generator import ChangelogRequest
-from forging_releases.infrastructure.changelog_generator.changelog_generator import (
+from forging_releases.infrastructure.changelog_generator.git_changelog_generator import (
     GitChangelogGenerator,
 )
 

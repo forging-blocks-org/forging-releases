@@ -21,12 +21,12 @@ class VersioningService(OutputPort):
     """
 
     @abstractmethod
-    def current_version(self) -> Result[ReleaseVersion, VersionNotFoundError]:
-        """Read the currently configured version (e.g., from pyproject.toml via Poetry).
+    def current_version(self) -> Result[ReleaseVersion, VersioningServiceError]:
+        """Read the currently configured version.
 
         Returns:
             Ok(ReleaseVersion) if the version is found and valid,
-            Err(VersionNotFoundError) if the version cannot be determined.
+            Err(VersioningServiceError) if the version cannot be determined.
         """
         ...
 

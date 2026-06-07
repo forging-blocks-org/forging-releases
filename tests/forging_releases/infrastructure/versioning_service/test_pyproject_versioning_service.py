@@ -1,5 +1,3 @@
-# pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false, reportOptionalMemberAccess=false
-
 from __future__ import annotations
 
 import tempfile
@@ -28,6 +26,7 @@ class TestPyProjectVersioningService:
 
         assert result.is_ok is True
         assert result.value == ReleaseVersion(1, 2, 3)
+        assert result.value is not None
         assert result.value.value == "1.2.3"
 
     @pytest.mark.parametrize(
@@ -112,6 +111,7 @@ class TestPyProjectVersioningService:
 
         result = svc.current_version()
         assert result.is_ok is True
+        assert result.value is not None
         original = result.value
 
         apply_result = svc.apply_version(ReleaseVersion(5, 0, 0))
@@ -119,5 +119,7 @@ class TestPyProjectVersioningService:
         rollback_result = svc.rollback_version(original)
         assert rollback_result.is_ok is True
 
-        assert svc.current_version() == Ok(original)
-        assert svc.current_version().value.value == "1.2.3"
+        final_result = svc.current_version()
+        assert final_result == Ok(original)
+        assert final_result.value is not None
+        assert final_result.value.value == "1.2.3"

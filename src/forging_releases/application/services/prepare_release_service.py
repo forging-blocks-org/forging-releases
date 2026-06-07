@@ -194,8 +194,8 @@ class PrepareReleaseService(PrepareReleaseUseCase):
                     pass
 
             match self._apply_version(context, dry_run=False):
-                case Err() as err:
-                    return err
+                case Err(error=err):
+                    return Err(err)
                 case _:
                     pass
             changelog_entries = await self._generate_changelog(context)
@@ -221,8 +221,8 @@ class PrepareReleaseService(PrepareReleaseUseCase):
     ) -> Result[list[str], CommandExecutionError | ProjectConfigurationError]:
         self._branch_handling(context, dry_run=True)
         match self._versioning_service.apply_version(context.version, dry_run=True):
-            case Err() as err:
-                return err
+            case Err(error=err):
+                return Err(err)
             case _:
                 pass
         changelog_entries = await self._generate_changelog(context)

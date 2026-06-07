@@ -33,7 +33,7 @@ def http_pr_server() -> Generator[str]:
     server = HTTPServer(("127.0.0.1", 0), _RequestCaptureHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    host: str = server.server_address[0]
-    port: int = server.server_address[1]
+    host = str(server.server_address[0])
+    port = int(server.server_address[1])
     yield f"http://{host}:{port}"
     server.shutdown()

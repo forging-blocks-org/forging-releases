@@ -39,10 +39,13 @@ class PyProjectVersioningService(VersioningService):
             Err(VersionNotFoundError) if the version string is missing or malformed,
             Err(ProjectConfigurationError) if the file cannot be read.
         """
+        content: str = ""
         match self._read_pyproject():
-            case Err() as err:
-                return err
-            case Ok(value=content):
+            case Err(error=err):
+                return Err(err)
+            case Ok(value=value):
+                content = value
+            case _:
                 pass
 
         match self._VERSION_PATTERN.search(content):
@@ -58,6 +61,10 @@ class PyProjectVersioningService(VersioningService):
                 )
             case Ok(value=release_version):
                 return Ok(release_version)
+            case _:
+                return Err(
+                    VersionNotFoundError(f"invalid version in pyproject.toml: {version_str}")
+                )
 
     def compute_next_version(
         self,
@@ -73,8 +80,8 @@ class PyProjectVersioningService(VersioningService):
             Err if the current version cannot be read.
         """
         match self.current_version():
-            case Err() as err:
-                return err
+            case Err(error=err):
+                return Err(err)
             case Ok(value=current):
                 match level.value:
                     case ReleaseLevelEnum.MAJOR:
@@ -83,6 +90,10 @@ class PyProjectVersioningService(VersioningService):
                         return Ok(ReleaseVersion(current.major, current.minor + 1, 0))
                     case ReleaseLevelEnum.PATCH:
                         return Ok(ReleaseVersion(current.major, current.minor, current.patch + 1))
+                    case _:
+                        return Err(VersionNotFoundError("invalid release level"))
+            case _:
+                return Err(VersionNotFoundError("unknown error"))
 
     def apply_version(
         self,
@@ -104,11 +115,14 @@ class PyProjectVersioningService(VersioningService):
             print(f"{self._DRY_RUN_PREFIX} set version = {version.value}")
             return Ok(None)
 
+        new_content: str = ""
         match self._read_pyproject():
-            case Err() as err:
-                return err
+            case Err(error=err):
+                return Err(err)
             case Ok(value=content):
                 new_content = self._VERSION_PATTERN.sub(f'version = "{version.value}"', content)
+            case _:
+                pass
 
         pyproject = self._pyproject_path()
         try:

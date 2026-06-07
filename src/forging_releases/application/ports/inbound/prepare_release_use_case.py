@@ -11,6 +11,7 @@ from forging_blocks.foundation import Result
 from forging_releases.application.errors import (
     CommandExecutionError,
     InvalidReleaseLevelValueError,
+    ProjectConfigurationError,
     VersionNotFoundError,
 )
 
@@ -50,7 +51,10 @@ class PrepareReleaseOutput:
 
 
 type _PrepareReleaseError = (
-    InvalidReleaseLevelValueError | VersionNotFoundError | CommandExecutionError
+    InvalidReleaseLevelValueError
+    | VersionNotFoundError
+    | CommandExecutionError
+    | ProjectConfigurationError
 )
 
 
@@ -85,7 +89,7 @@ class PrepareReleaseUseCase(
 
         Returns:
             Ok with PrepareReleaseOutput on success,
-            Err with InvalidReleaseLevelValueError, VersionNotFoundError, or
-            CommandExecutionError on failure.
+            Err with InvalidReleaseLevelValueError, VersionNotFoundError,
+            CommandExecutionError, or ProjectConfigurationError on failure.
         """
         ...

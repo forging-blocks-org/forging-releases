@@ -13,7 +13,7 @@ from forging_releases.infrastructure.command_runner.command_runner import (
 )
 
 
-@ pytest.mark.integration
+@pytest.mark.integration
 class TestSuccessfulCommands:
     def test_when_command_succeeds_then_returns_stdout(self) -> None:
         runner = SubprocessCommandRunner()
@@ -33,7 +33,7 @@ class TestSuccessfulCommands:
         assert result.stderr.strip() == "warning"
 
 
-@ pytest.mark.integration
+@pytest.mark.integration
 class TestFailingCommands:
     def test_when_command_fails_then_raises_runtime_error(self) -> None:
         runner = SubprocessCommandRunner()
@@ -53,7 +53,7 @@ class TestFailingCommands:
         assert "error message" in str(exc_info.value)
 
 
-@ pytest.mark.integration
+@pytest.mark.integration
 class TestGitSpecificErrors:
     def test_when_git_not_a_repository_then_extracts_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -71,7 +71,7 @@ class TestGitSpecificErrors:
         assert "Git command failed:" in str(exc_info.value)
 
 
-@ pytest.mark.integration
+@pytest.mark.integration
 class TestCwdParameter:
     def test_when_cwd_provided_then_command_runs_in_that_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,7 +97,7 @@ class TestCwdParameter:
             assert result.stdout.strip() == tmpdir
 
 
-@ pytest.mark.integration
+@pytest.mark.integration
 class TestEnvPassthrough:
     def test_when_env_passed_then_command_sees_those_variables(self) -> None:
         runner = SubprocessCommandRunner()
@@ -121,7 +121,7 @@ class TestEnvPassthrough:
         assert ":" in result.stdout.strip()
 
 
-@ pytest.mark.integration
+@pytest.mark.integration
 class TestDryRun:
     def test_when_dry_run_then_returns_empty_result(self) -> None:
         runner = SubprocessCommandRunner()

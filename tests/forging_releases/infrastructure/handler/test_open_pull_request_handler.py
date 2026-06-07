@@ -55,7 +55,10 @@ def http_server() -> Generator[str]:
 class TestOpenPullRequestHandler:
     async def test_when_dry_run_true_then_no_http_call(self, http_server: str) -> None:
         pr_service = GitHubPullRequestService(
-            owner="owner", repo="repo", token="fake", base_url=http_server,
+            owner="owner",
+            repo="repo",
+            token="fake",
+            base_url=http_server,
         )
         use_case = OpenReleasePullRequestService(pull_request_service=pr_service)
         handler = OpenPullRequestHandler(use_case=use_case)
@@ -67,16 +70,22 @@ class TestOpenPullRequestHandler:
         assert _RequestCaptureHandler.received == []
 
     async def test_when_dry_run_false_then_creates_pr_with_correct_data(
-        self, http_server: str,
+        self,
+        http_server: str,
     ) -> None:
         pr_service = GitHubPullRequestService(
-            owner="owner", repo="repo", token="fake", base_url=http_server,
+            owner="owner",
+            repo="repo",
+            token="fake",
+            base_url=http_server,
         )
         use_case = OpenReleasePullRequestService(pull_request_service=pr_service)
         handler = OpenPullRequestHandler(use_case=use_case)
 
         command = OpenPullRequestCommand(
-            version="2.0.0", branch="release/v2.0.0", dry_run=False,
+            version="2.0.0",
+            branch="release/v2.0.0",
+            dry_run=False,
         )
 
         await handler.handle(command)
@@ -87,35 +96,49 @@ class TestOpenPullRequestHandler:
         assert body["head"] == "release/v2.0.0"
 
     async def test_when_invalid_version_then_raises_runtime_error(
-        self, http_server: str,
+        self,
+        http_server: str,
     ) -> None:
         pr_service = GitHubPullRequestService(
-            owner="owner", repo="repo", token="fake", base_url=http_server,
+            owner="owner",
+            repo="repo",
+            token="fake",
+            base_url=http_server,
         )
         use_case = OpenReleasePullRequestService(pull_request_service=pr_service)
         handler = OpenPullRequestHandler(use_case=use_case)
 
         command = OpenPullRequestCommand(
-            version="not-a-version", branch="release/v1.0.0", dry_run=True,
+            version="not-a-version",
+            branch="release/v1.0.0",
+            dry_run=True,
         )
 
         with pytest.raises(RuntimeError, match="not-a-version"):
             await handler.handle(command)
 
     async def test_when_multiple_versions_then_each_creates_correct_input(
-        self, http_server: str,
+        self,
+        http_server: str,
     ) -> None:
         pr_service = GitHubPullRequestService(
-            owner="owner", repo="repo", token="fake", base_url=http_server,
+            owner="owner",
+            repo="repo",
+            token="fake",
+            base_url=http_server,
         )
         use_case = OpenReleasePullRequestService(pull_request_service=pr_service)
         handler = OpenPullRequestHandler(use_case=use_case)
 
         command_v1 = OpenPullRequestCommand(
-            version="1.0.0", branch="release/v1.0.0", dry_run=False,
+            version="1.0.0",
+            branch="release/v1.0.0",
+            dry_run=False,
         )
         command_v2 = OpenPullRequestCommand(
-            version="3.2.1", branch="release/v3.2.1", dry_run=False,
+            version="3.2.1",
+            branch="release/v3.2.1",
+            dry_run=False,
         )
 
         await handler.handle(command_v1)
@@ -126,19 +149,27 @@ class TestOpenPullRequestHandler:
         assert _RequestCaptureHandler.received[1]["title"] == "Release v3.2.1"
 
     async def test_when_sequential_calls_then_independent_inputs(
-        self, http_server: str,
+        self,
+        http_server: str,
     ) -> None:
         pr_service = GitHubPullRequestService(
-            owner="owner", repo="repo", token="fake", base_url=http_server,
+            owner="owner",
+            repo="repo",
+            token="fake",
+            base_url=http_server,
         )
         use_case = OpenReleasePullRequestService(pull_request_service=pr_service)
         handler = OpenPullRequestHandler(use_case=use_case)
 
         cmd_a = OpenPullRequestCommand(
-            version="1.0.0", branch="release/v1.0.0", dry_run=False,
+            version="1.0.0",
+            branch="release/v1.0.0",
+            dry_run=False,
         )
         cmd_b = OpenPullRequestCommand(
-            version="1.0.0", branch="release/v1.0.0", dry_run=False,
+            version="1.0.0",
+            branch="release/v1.0.0",
+            dry_run=False,
         )
 
         await handler.handle(cmd_a)

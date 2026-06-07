@@ -53,6 +53,4 @@ class GitHubPullRequestService(PullRequestService):
                     url=response_data["html_url"],
                 )
         except (urllib.error.HTTPError, urllib.error.URLError, OSError) as exc:
-            raise RuntimeError(
-                f"Failed to create pull request: {exc}"
-            ) from exc
+            raise RuntimeError(f"Failed to create pull request: {exc}") from exc

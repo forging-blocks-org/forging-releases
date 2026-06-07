@@ -6,7 +6,11 @@ from dataclasses import dataclass, field
 from forging_blocks.application.ports import UseCase
 from forging_blocks.foundation import Result
 
-from forging_releases.application.errors import InvalidReleaseLevelValueError
+from forging_releases.application.errors import (
+    CommandExecutionError,
+    InvalidReleaseLevelValueError,
+    VersionNotFoundError,
+)
 
 
 @dataclass(frozen=True)
@@ -43,8 +47,13 @@ class PrepareReleaseOutput:
     changelog_entries: list[str] = field(default_factory=list[str])
 
 
+type _PrepareReleaseError = (
+    InvalidReleaseLevelValueError | VersionNotFoundError | CommandExecutionError
+)
+
+
 class PrepareReleaseUseCase(
-    UseCase[PrepareReleaseInput, Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]]
+    UseCase[PrepareReleaseInput, Result[PrepareReleaseOutput, _PrepareReleaseError]]
 ):
     """Prepares a release from the main branch.
 
@@ -66,4 +75,4 @@ class PrepareReleaseUseCase(
     async def execute(
         self,
         request: PrepareReleaseInput,
-    ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]: ...
+    ) -> Result[PrepareReleaseOutput, _PrepareReleaseError]: ...

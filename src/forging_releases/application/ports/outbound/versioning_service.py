@@ -1,22 +1,29 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
+from forging_blocks.foundation import Result
 from forging_blocks.foundation.ports import OutputPort
 
+from forging_releases.application.errors import VersionNotFoundError
 from forging_releases.domain.value_objects import (
     ReleaseLevel,
     ReleaseVersion,
 )
 
 
-class VersioningService(OutputPort, ABC):
+class VersioningService(OutputPort):
     """Computes and applies semantic versions to the package definition.
 
     Must be non-interactive and deterministic.
     """
 
     @abstractmethod
-    def current_version(self) -> ReleaseVersion:
-        """Read the currently configured version (e.g., from pyproject.toml via Poetry)."""
+    def current_version(self) -> Result[ReleaseVersion, VersionNotFoundError]:
+        """Read the currently configured version (e.g., from pyproject.toml via Poetry).
+
+        Returns:
+            Ok(ReleaseVersion) if the version is found and valid,
+            Err(VersionNotFoundError) if the version cannot be determined.
+        """
         ...
 
     @abstractmethod

@@ -1,14 +1,15 @@
 from abc import abstractmethod
 
-from forging_blocks.foundation import OutputPort
+from forging_blocks.foundation import OutputPort, Result
 
+from forging_releases.application.errors import CommandExecutionError
 from forging_releases.domain.value_objects import ReleaseBranchName
 
 
 class VersionControl(OutputPort):
     """Abstracts version control operations required by the release workflow.
 
-    Must be non-interactive. All methods must raise on failure.
+    Must be non-interactive.
     """
 
     @abstractmethod
@@ -25,12 +26,12 @@ class VersionControl(OutputPort):
         branch: ReleaseBranchName,
         *,
         dry_run: bool = False,
-    ) -> None:
+    ) -> Result[None, CommandExecutionError]:
         """Checkout local branch."""
         ...
 
     @abstractmethod
-    def checkout_main(self) -> None:
+    def checkout_main(self) -> Result[None, CommandExecutionError]:
         """Return to the main branch (or the configured default branch)."""
         ...
 
@@ -39,7 +40,7 @@ class VersionControl(OutputPort):
         self,
         *,
         dry_run: bool = False,
-    ) -> None:
+    ) -> Result[None, CommandExecutionError]:
         """Commit the version bump and any generated artifacts (e.g., changelog).
         Must be non-interactive.
         """
@@ -51,7 +52,7 @@ class VersionControl(OutputPort):
         branch: ReleaseBranchName,
         *,
         dry_run: bool = False,
-    ) -> None:
+    ) -> Result[None, CommandExecutionError]:
         """Create local branch."""
         ...
 
@@ -59,7 +60,7 @@ class VersionControl(OutputPort):
     def delete_local_branch(
         self,
         branch: ReleaseBranchName,
-    ) -> None:
+    ) -> Result[None, CommandExecutionError]:
         """Delete local branch if present."""
         ...
 
@@ -67,7 +68,7 @@ class VersionControl(OutputPort):
     def delete_remote_branch(
         self,
         branch: ReleaseBranchName,
-    ) -> None:
+    ) -> Result[None, CommandExecutionError]:
         """Delete remote branch (origin) if present.
         Must be implemented as a non-interactive command (e.g., git push origin :branch).
         """
@@ -79,7 +80,7 @@ class VersionControl(OutputPort):
         branch: ReleaseBranchName,
         *,
         dry_run: bool = False,
-    ) -> None:
+    ) -> Result[None, CommandExecutionError]:
         """Push branch and tag."""
         ...
 

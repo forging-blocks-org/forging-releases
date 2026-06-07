@@ -3,6 +3,10 @@ from __future__ import annotations
 import os
 import subprocess
 
+from forging_blocks.foundation import Err, Ok, Result
+
+from forging_releases.application.errors import CommandExecutionError
+
 
 class SubprocessCommandRunner:
     _DRY_RUN_PREFIX: str = "[dry-run]"
@@ -17,17 +21,19 @@ class SubprocessCommandRunner:
         cwd: str | None = None,
         env: dict[str, str] | None = None,
         dry_run: bool = False,
-    ) -> subprocess.CompletedProcess[str]:
+    ) -> Result[subprocess.CompletedProcess[str], CommandExecutionError]:
         resolved_cwd = cwd or self._cwd
         resolved_cmd = list(cmd)
 
         if dry_run:
             print(f"{self._DRY_RUN_PREFIX} {' '.join(resolved_cmd)}")
-            return subprocess.CompletedProcess(
-                args=resolved_cmd,
-                returncode=0,
-                stdout="",
-                stderr="",
+            return Ok(
+                subprocess.CompletedProcess(
+                    args=resolved_cmd,
+                    returncode=0,
+                    stdout="",
+                    stderr="",
+                )
             )
 
         full_env = {**os.environ, **(env or {})}
@@ -41,28 +47,26 @@ class SubprocessCommandRunner:
                 text=True,
                 check=True,
             )
-            return result
+            return Ok(result)
         except subprocess.CalledProcessError as exc:
             error_message = self._extract_error(exc, resolved_cmd)
-            raise RuntimeError(error_message) from exc
+            return Err(CommandExecutionError(" ".join(resolved_cmd), error_message))
 
     @staticmethod
     def _extract_error(
         exc: subprocess.CalledProcessError,
         cmd: list[str],
     ) -> str:
-        command_str = " ".join(cmd)
         detail = exc.stderr.strip() or exc.stdout.strip() or "unknown error"
         exit_code = exc.returncode
-        base = f"Command failed with exit code {exit_code}: {detail}"
 
         if cmd and "git" in cmd[0]:
             git_error = SubprocessCommandRunner._extract_git_error(exc.stderr)
             if git_error:
-                return f"Git command failed: {git_error} (command: {command_str})"
-            return f"Git command failed: {base} (command: {command_str})"
+                return git_error
+            return f"exit code {exit_code}: {detail}"
 
-        return f"{base} (command: {command_str})"
+        return f"exit code {exit_code}: {detail}"
 
     @staticmethod
     def _extract_git_error(stderr: str) -> str | None:

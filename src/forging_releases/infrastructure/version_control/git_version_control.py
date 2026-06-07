@@ -3,6 +3,9 @@ from __future__ import annotations
 import os
 import subprocess
 
+from forging_blocks.foundation import Err, Ok, Result
+
+from forging_releases.application.errors import CommandExecutionError
 from forging_releases.application.ports.outbound.version_control import VersionControl
 from forging_releases.domain.value_objects import ReleaseBranchName
 
@@ -27,21 +30,26 @@ class GitVersionControl(VersionControl):
         branch: ReleaseBranchName,
         *,
         dry_run: bool = False,
-    ) -> None:
-        self._run_git(
+    ) -> Result[None, CommandExecutionError]:
+        return self._run_git_result(
             ["checkout", branch.value],
             dry_run=dry_run,
         )
 
-    def checkout_main(self) -> None:
-        self._run_git(["checkout", self._main_branch])
+    def checkout_main(self) -> Result[None, CommandExecutionError]:
+        return self._run_git_result(["checkout", self._main_branch])
 
-    def commit_release_artifacts(self, *, dry_run: bool = False) -> None:
-        self._run_git(
+    def commit_release_artifacts(
+        self, *, dry_run: bool = False
+    ) -> Result[None, CommandExecutionError]:
+        add_result = self._run_git_result(
             ["add", "."],
             dry_run=dry_run,
         )
-        self._run_git(
+        if add_result.is_err and not dry_run:
+            return add_result
+
+        return self._run_git_result(
             ["commit", "--no-edit", "--allow-empty", "-m", "chore: release"],
             dry_run=dry_run,
         )
@@ -51,20 +59,22 @@ class GitVersionControl(VersionControl):
         branch: ReleaseBranchName,
         *,
         dry_run: bool = False,
-    ) -> None:
-        self._run_git(
+    ) -> Result[None, CommandExecutionError]:
+        return self._run_git_result(
             ["checkout", "-b", branch.value],
             dry_run=dry_run,
         )
 
-    def delete_local_branch(self, branch: ReleaseBranchName) -> None:
-        self._run_git(
+    def delete_local_branch(self, branch: ReleaseBranchName) -> Result[None, CommandExecutionError]:
+        return self._run_git_result(
             ["branch", "-D", branch.value],
             check=False,
         )
 
-    def delete_remote_branch(self, branch: ReleaseBranchName) -> None:
-        self._run_git(
+    def delete_remote_branch(
+        self, branch: ReleaseBranchName
+    ) -> Result[None, CommandExecutionError]:
+        return self._run_git_result(
             ["push", "origin", "--delete", branch.value],
             check=False,
         )
@@ -74,12 +84,15 @@ class GitVersionControl(VersionControl):
         branch: ReleaseBranchName,
         *,
         dry_run: bool = False,
-    ) -> None:
-        self._run_git(
+    ) -> Result[None, CommandExecutionError]:
+        push_result = self._run_git_result(
             ["push", "--set-upstream", "origin", branch.value],
             dry_run=dry_run,
         )
-        self._run_git(
+        if push_result.is_err and not dry_run:
+            return push_result
+
+        return self._run_git_result(
             ["push", "--tags"],
             dry_run=dry_run,
         )
@@ -130,3 +143,18 @@ class GitVersionControl(VersionControl):
             text=True,
             check=check,
         )
+
+    def _run_git_result(
+        self,
+        args: list[str],
+        *,
+        dry_run: bool = False,
+        check: bool = True,
+    ) -> Result[None, CommandExecutionError]:
+        try:
+            self._run_git(args, dry_run=dry_run, check=check)
+            return Ok(None)
+        except subprocess.CalledProcessError as exc:
+            cmd_str = " ".join(["git", *args])
+            detail = exc.stderr.strip() or exc.stdout.strip() or "unknown error"
+            return Err(CommandExecutionError(cmd_str, detail))

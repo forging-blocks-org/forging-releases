@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from forging_blocks.foundation import OutputPort
+from forging_blocks.foundation import OutputPort, Result
 
+from forging_releases.application.errors import PullRequestCreationError
 from forging_releases.domain.entities import ReleasePullRequest
 
 
@@ -18,6 +19,14 @@ class PullRequestService(OutputPort):
     """Service that manages pull request creation in remote repository."""
 
     @abstractmethod
-    def open(self, pull_request: ReleasePullRequest) -> OpenPullRequestOutput:
-        """Open a pull request and return its details."""
+    def open(
+        self,
+        pull_request: ReleasePullRequest,
+    ) -> Result[OpenPullRequestOutput, PullRequestCreationError]:
+        """Open a pull request and return its details.
+
+        Returns:
+            Ok(OpenPullRequestOutput) if the PR was created successfully,
+            Err(PullRequestCreationError) if the remote API call failed.
+        """
         ...

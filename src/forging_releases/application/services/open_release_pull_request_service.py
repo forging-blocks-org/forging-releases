@@ -1,6 +1,6 @@
 from forging_blocks.foundation import Err, Ok, Result
 
-from forging_releases.application.errors import InvalidVersionError
+from forging_releases.application.errors import InvalidVersionError, PullRequestCreationError
 from forging_releases.application.ports.inbound import (
     OpenReleasePullRequestInput,
     OpenReleasePullRequestOutput,
@@ -15,6 +15,8 @@ from forging_releases.domain.value_objects import (
     ReleaseBranchName,
     ReleaseVersion,
 )
+
+type _OpenPRError = InvalidVersionError | PullRequestCreationError
 
 
 class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
@@ -36,8 +38,9 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
-        match self._build_release_pull_request(request):
+    ) -> Result[OpenReleasePullRequestOutput, _OpenPRError]:
+        build_result = self._build_release_pull_request(request)
+        match build_result:
             case Err(error=err):
                 return Err(err)
             case Ok(value=pull_request):
@@ -49,14 +52,19 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
                         )
                     )
 
-                output = self._pull_request_service.open(pull_request)
-
-                return Ok(
-                    OpenReleasePullRequestOutput(
-                        pr_id=output.pr_id,
-                        url=output.url,
-                    )
-                )
+                pr_result = self._pull_request_service.open(pull_request)
+                match pr_result:
+                    case Err(error=err):
+                        return Err(err)
+                    case Ok(value=output):
+                        return Ok(
+                            OpenReleasePullRequestOutput(
+                                pr_id=output.pr_id,
+                                url=output.url,
+                            )
+                        )
+                    case _:
+                        return Err(PullRequestCreationError("unknown pull request error"))
             case _:
                 return Err(InvalidVersionError(request.version))
 

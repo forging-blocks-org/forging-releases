@@ -3,6 +3,9 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from forging_blocks.foundation import Err, Ok, Result
+
+from forging_releases.application.errors import VersionNotFoundError
 from forging_releases.application.ports.outbound.versioning_service import VersioningService
 from forging_releases.domain.value_objects import ReleaseLevel, ReleaseLevelEnum, ReleaseVersion
 
@@ -14,24 +17,33 @@ class PyProjectVersioningService(VersioningService):
     def __init__(self, *, cwd: str | None = None) -> None:
         self._cwd = cwd
 
-    def current_version(self) -> ReleaseVersion:
+    def current_version(self) -> Result[ReleaseVersion, VersionNotFoundError]:
         content = self._read_pyproject()
 
         match = self._VERSION_PATTERN.search(content)
         if not match:
-            raise ValueError("version key not found in project section")
+            return Err(VersionNotFoundError("version key not found in pyproject.toml"))
 
         version_str = match.group(1)
         result = ReleaseVersion.from_str(version_str)
         if result.is_err:
-            raise ValueError(f"Invalid version in pyproject.toml: {version_str}")
+            return Err(VersionNotFoundError(f"invalid version in pyproject.toml: {version_str}"))
 
         release_version = result.value
         assert release_version is not None
-        return release_version
+        return Ok(release_version)
 
     def compute_next_version(self, level: ReleaseLevel) -> ReleaseVersion:
-        current = self.current_version()
+        version_result = self.current_version()
+        match version_result:
+            case Err():
+                return ReleaseVersion(0, 1, 0)
+            case Ok(value=current):
+                pass
+            case _:
+                return ReleaseVersion(0, 1, 0)
+
+        current = version_result.value
         match level.value:
             case ReleaseLevelEnum.MAJOR:
                 return ReleaseVersion(current.major + 1, 0, 0)
@@ -63,5 +75,5 @@ class PyProjectVersioningService(VersioningService):
     def _extract_version(cls, content: str) -> str:
         match = cls._VERSION_PATTERN.search(content)
         if not match:
-            raise ValueError("version key not found")
+            return ""
         return match.group(1)

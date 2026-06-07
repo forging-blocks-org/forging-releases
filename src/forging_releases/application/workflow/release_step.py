@@ -5,4 +5,4 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ReleaseStep:
     name: str
-    undo: Callable[[], None]
+    undo: Callable[[], object]

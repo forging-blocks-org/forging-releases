@@ -95,7 +95,7 @@ class TestOpenPullRequestHandler:
         assert body["title"] == "Release v2.0.0"
         assert body["head"] == "release/v2.0.0"
 
-    async def test_when_invalid_version_then_raises_runtime_error(
+    async def test_when_invalid_version_then_returns_none(
         self,
         http_server: str,
     ) -> None:
@@ -114,8 +114,8 @@ class TestOpenPullRequestHandler:
             dry_run=True,
         )
 
-        with pytest.raises(RuntimeError, match="not-a-version"):
-            await handler.handle(command)
+        result = await handler.handle(command)
+        assert result is None
 
     async def test_when_multiple_versions_then_each_creates_correct_input(
         self,

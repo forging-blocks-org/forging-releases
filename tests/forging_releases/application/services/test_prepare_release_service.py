@@ -3,6 +3,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from forging_blocks.foundation import Ok
+
 from forging_releases.application.errors import InvalidReleaseLevelValueError
 from forging_releases.application.ports.inbound.prepare_release_use_case import (
     PrepareReleaseInput,
@@ -52,6 +54,10 @@ class TestPrepareReleaseServiceDryRun:
     async def test_execute_when_dry_run_then_returns_ok_with_output(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
@@ -59,7 +65,7 @@ class TestPrepareReleaseServiceDryRun:
         current = _make_version(1, 0, 0)
         next_version = _make_version(1, 1, 0)
 
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(
@@ -88,6 +94,10 @@ class TestPrepareReleaseServiceDryRun:
     async def test_execute_when_dry_run_branch_exists_then_checkout_not_create(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
@@ -96,7 +106,7 @@ class TestPrepareReleaseServiceDryRun:
         next_version = _make_version(1, 0, 1)
         branch = _make_branch(next_version)
 
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = True
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
@@ -122,13 +132,17 @@ class TestPrepareReleaseServiceNormal:
     async def test_execute_when_new_branch_then_creates_and_pushes(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
         current = _make_version(1, 0, 0)
         next_version = _make_version(2, 0, 0)
         branch = _make_branch(next_version)
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(
@@ -156,13 +170,17 @@ class TestPrepareReleaseServiceNormal:
     async def test_execute_when_branch_exists_then_checkout_and_push(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
         current = _make_version(1, 0, 0)
         next_version = _make_version(1, 0, 1)
         branch = _make_branch(next_version)
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = True
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
@@ -181,12 +199,16 @@ class TestPrepareReleaseServiceNormal:
     async def test_execute_when_not_dry_run_then_commits_artifacts(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
         current = _make_version(1, 0, 0)
         next_version = _make_version(1, 0, 1)
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
@@ -207,12 +229,16 @@ class TestPrepareReleaseServiceValueComputation:
     async def test_execute_when_patch_level_then_computes_patch_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
         current = _make_version(1, 2, 3)
         next_version = _make_version(1, 2, 4)
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
@@ -231,12 +257,16 @@ class TestPrepareReleaseServiceValueComputation:
     async def test_execute_when_major_level_then_computes_major_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
         current = _make_version(1, 2, 3)
         next_version = _make_version(2, 0, 0)
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
@@ -255,12 +285,16 @@ class TestPrepareReleaseServiceValueComputation:
     async def test_execute_when_minor_level_then_computes_minor_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
         current = _make_version(1, 2, 3)
         next_version = _make_version(1, 3, 0)
-        versioning_service.current_version.return_value = current
+        versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
@@ -282,6 +316,10 @@ class TestPrepareReleaseServiceErrorPath:
     async def test_execute_when_invalid_release_level_then_returns_err(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
+        version_control.checkout.return_value = Ok(None)
+        version_control.create_branch.return_value = Ok(None)
+        version_control.commit_release_artifacts.return_value = Ok(None)
+        version_control.push.return_value = Ok(None)
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)

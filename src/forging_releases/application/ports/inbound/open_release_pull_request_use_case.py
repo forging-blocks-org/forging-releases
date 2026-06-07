@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from forging_blocks.application.ports import UseCase
 from forging_blocks.foundation import Result
 
-from forging_releases.application.errors import InvalidVersionError
+from forging_releases.application.errors import InvalidVersionError, PullRequestCreationError
 
 
 @dataclass(frozen=True)
@@ -36,10 +36,13 @@ class OpenReleasePullRequestOutput:
     url: str | None
 
 
+type _OpenPRError = InvalidVersionError | PullRequestCreationError
+
+
 class OpenReleasePullRequestUseCase(
     UseCase[
         OpenReleasePullRequestInput,
-        Result[OpenReleasePullRequestOutput, InvalidVersionError],
+        Result[OpenReleasePullRequestOutput, _OpenPRError],
     ]
 ):
     """Creates the release pull request representing
@@ -54,4 +57,4 @@ class OpenReleasePullRequestUseCase(
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]: ...
+    ) -> Result[OpenReleasePullRequestOutput, _OpenPRError]: ...

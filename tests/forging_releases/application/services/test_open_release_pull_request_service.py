@@ -3,6 +3,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from forging_blocks.foundation import Ok
+
 from forging_releases.application.errors import InvalidVersionError
 from forging_releases.application.ports.inbound.open_release_pull_request_use_case import (
     OpenReleasePullRequestInput,
@@ -38,7 +40,7 @@ class TestOpenReleasePullRequestService:
     async def test_execute_when_not_dry_run_then_calls_pull_request_service(self) -> None:
         mock_output = OpenPullRequestOutput(pr_id="42", url="https://github.com/org/repo/pull/42")
         pull_request_service = Mock(spec=PullRequestService)
-        pull_request_service.open.return_value = mock_output
+        pull_request_service.open.return_value = Ok(mock_output)
         service = OpenReleasePullRequestService(
             pull_request_service=pull_request_service,
         )
@@ -57,7 +59,7 @@ class TestOpenReleasePullRequestService:
     async def test_execute_when_pull_request_service_returns_none_ids_then_mapped(self) -> None:
         mock_output = OpenPullRequestOutput(pr_id=None, url=None)
         pull_request_service = Mock(spec=PullRequestService)
-        pull_request_service.open.return_value = mock_output
+        pull_request_service.open.return_value = Ok(mock_output)
         service = OpenReleasePullRequestService(
             pull_request_service=pull_request_service,
         )

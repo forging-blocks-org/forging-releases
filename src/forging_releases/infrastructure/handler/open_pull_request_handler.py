@@ -17,8 +17,4 @@ class OpenPullRequestHandler:
             branch=message.branch,
             dry_run=message.dry_run,
         )
-        result = await self._use_case.execute(input_dto)
-        if result.is_err:
-            error = result.error
-            assert error is not None
-            raise RuntimeError(str(error.message.value))
+        await self._use_case.execute(input_dto)

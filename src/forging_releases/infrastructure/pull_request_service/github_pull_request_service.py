@@ -4,6 +4,9 @@ import json
 import urllib.error
 import urllib.request
 
+from forging_blocks.foundation import Err, Ok, Result
+
+from forging_releases.application.errors import PullRequestCreationError
 from forging_releases.application.ports.outbound import OpenPullRequestOutput, PullRequestService
 from forging_releases.domain.entities import ReleasePullRequest
 
@@ -22,7 +25,10 @@ class GitHubPullRequestService(PullRequestService):
         self._token = token
         self._base_url = base_url
 
-    def open(self, pull_request: ReleasePullRequest) -> OpenPullRequestOutput:
+    def open(
+        self,
+        pull_request: ReleasePullRequest,
+    ) -> Result[OpenPullRequestOutput, PullRequestCreationError]:
         url = f"{self._base_url}/repos/{self._owner}/{self._repo}/pulls"
 
         body_dict = {
@@ -48,9 +54,11 @@ class GitHubPullRequestService(PullRequestService):
         try:
             with urllib.request.urlopen(req) as response:
                 response_data = json.loads(response.read().decode("utf-8"))
-                return OpenPullRequestOutput(
-                    pr_id=str(response_data["number"]),
-                    url=response_data["html_url"],
+                return Ok(
+                    OpenPullRequestOutput(
+                        pr_id=str(response_data["number"]),
+                        url=response_data["html_url"],
+                    )
                 )
         except (urllib.error.HTTPError, urllib.error.URLError, OSError) as exc:
-            raise RuntimeError(f"Failed to create pull request: {exc}") from exc
+            return Err(PullRequestCreationError(str(exc)))

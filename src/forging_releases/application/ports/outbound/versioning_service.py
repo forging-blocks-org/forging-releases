@@ -1,3 +1,5 @@
+"""Defines the outbound port for computing and applying semantic versions to the project."""
+
 from abc import abstractmethod
 
 from forging_blocks.foundation import Result

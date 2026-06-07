@@ -10,8 +10,9 @@ from forging_releases.infrastructure.release_transaction.in_memory_release_trans
 
 @pytest.mark.integration
 class TestInMemoryReleaseTransaction:
-    async def test_when_no_exception_then_no_rollback(self) -> None:
+    async def test___aexit___when_no_exception_then_no_rollback(self) -> None:
         calls: list[str] = []
+
         step = ReleaseStep(name="test", undo=lambda: calls.append("rolled_back"))
         tx = InMemoryReleaseTransaction()
 
@@ -20,8 +21,9 @@ class TestInMemoryReleaseTransaction:
 
         assert calls == []
 
-    async def test_when_exception_then_rolls_back_in_reverse(self) -> None:
+    async def test___aexit___when_exception_then_rolls_back_in_reverse(self) -> None:
         calls: list[str] = []
+
         step1 = ReleaseStep(name="first", undo=lambda: calls.append("undo_first"))
         step2 = ReleaseStep(name="second", undo=lambda: calls.append("undo_second"))
         tx = InMemoryReleaseTransaction()
@@ -34,7 +36,7 @@ class TestInMemoryReleaseTransaction:
 
         assert calls == ["undo_second", "undo_first"]
 
-    async def test_when_no_steps_registered_then_no_error_on_exception(self) -> None:
+    async def test___aexit___when_no_steps_registered_then_no_error_on_exception(self) -> None:
         tx = InMemoryReleaseTransaction()
 
         with pytest.raises(ValueError, match="boom"):

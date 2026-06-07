@@ -41,8 +41,12 @@ from forging_releases.infrastructure.versioning_service.pyproject_versioning_ser
     PyProjectVersioningService,
 )
 
+"""Dependency injection container wiring infrastructure services together."""
+
 
 class Container:
+    """Configures and resolves all infrastructure dependencies for release workflows."""
+
     def __init__(
         self,
         *,
@@ -53,6 +57,16 @@ class Container:
         github_token: str | None = None,
         github_base_url: str = "https://api.github.com",
     ) -> None:
+        """Initialize the container.
+
+        Args:
+            cwd: Working directory for Git and pyproject operations.
+            main_branch: Name of the main branch.
+            github_owner: GitHub repository owner.
+            github_repo: GitHub repository name.
+            github_token: GitHub personal access token.
+            github_base_url: GitHub API base URL.
+        """
         self._cwd = cwd
         self._main_branch = main_branch
         self._github_owner = github_owner
@@ -70,6 +84,11 @@ class Container:
         self._open_pr_use_case: OpenReleasePullRequestUseCase | None = None
 
     def get_prepare_release_use_case(self) -> PrepareReleaseUseCase:
+        """Get or create the PrepareReleaseUseCase singleton.
+
+        Returns:
+            The PrepareReleaseUseCase instance.
+        """
         if self._prepare_use_case is None:
             self._prepare_use_case = PrepareReleaseService(
                 versioning_service=self._resolve_versioning_service(),
@@ -81,6 +100,11 @@ class Container:
         return self._prepare_use_case
 
     def get_open_release_pull_request_use_case(self) -> OpenReleasePullRequestUseCase:
+        """Get or create the OpenReleasePullRequestUseCase singleton.
+
+        Returns:
+            The OpenReleasePullRequestUseCase instance.
+        """
         if self._open_pr_use_case is None:
             self._open_pr_use_case = OpenReleasePullRequestService(
                 pull_request_service=self._resolve_pull_request_service(),
@@ -88,6 +112,10 @@ class Container:
         return self._open_pr_use_case
 
     async def initialize(self) -> None:
+        """Register the OpenPullRequestCommand handler on the message bus.
+
+        Skips registration if any required GitHub configuration is missing.
+        """
         if self._github_owner is None or self._github_repo is None or self._github_token is None:
             return
 

@@ -10,8 +10,12 @@ from forging_releases.application.errors import PullRequestCreationError
 from forging_releases.application.ports.outbound import OpenPullRequestOutput, PullRequestService
 from forging_releases.domain.entities import ReleasePullRequest
 
+"""GitHub API-based pull request service."""
+
 
 class GitHubPullRequestService(PullRequestService):
+    """Opens pull requests on GitHub via the REST API."""
+
     def __init__(
         self,
         *,
@@ -20,6 +24,14 @@ class GitHubPullRequestService(PullRequestService):
         token: str,
         base_url: str = "https://api.github.com",
     ) -> None:
+        """Initialize the service.
+
+        Args:
+            owner: GitHub repository owner (user or organization).
+            repo: GitHub repository name.
+            token: GitHub personal access token.
+            base_url: GitHub API base URL. Defaults to https://api.github.com.
+        """
         self._owner = owner
         self._repo = repo
         self._token = token
@@ -29,6 +41,15 @@ class GitHubPullRequestService(PullRequestService):
         self,
         pull_request: ReleasePullRequest,
     ) -> Result[OpenPullRequestOutput, PullRequestCreationError]:
+        """Create a pull request on GitHub.
+
+        Args:
+            pull_request: The pull request details.
+
+        Returns:
+            Ok with OpenPullRequestOutput containing the PR ID and URL,
+            Err with PullRequestCreationError on failure.
+        """
         url = f"{self._base_url}/repos/{self._owner}/{self._repo}/pulls"
 
         body_dict = {

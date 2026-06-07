@@ -1,3 +1,5 @@
+"""Defines the outbound port for version control (git) operations needed by the release workflow."""
+
 from abc import abstractmethod
 
 from forging_blocks.foundation import OutputPort, Result

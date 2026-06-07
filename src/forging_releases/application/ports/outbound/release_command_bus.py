@@ -1,3 +1,5 @@
+"""Defines the outbound port for publishing release-related domain commands."""
+
 from typing import Protocol, TypeVar
 
 from forging_blocks.application.ports.inbound.message_handler import CommandHandler

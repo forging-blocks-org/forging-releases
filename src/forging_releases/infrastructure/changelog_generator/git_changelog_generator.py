@@ -8,14 +8,31 @@ from forging_releases.application.ports.outbound.changelog_generator import (
     ChangelogResponse,
 )
 
+"""Changelog generator that reads Git commit history."""
+
 
 class GitChangelogGenerator(ChangelogGenerator):
+    """Generates changelog entries from Git log between tags."""
+
     _DRY_RUN_PREFIX: str = "[dry-run]"
 
     def __init__(self, *, cwd: str | None = None) -> None:
+        """Initialize the generator.
+
+        Args:
+            cwd: Working directory of the Git repository.
+        """
         self._cwd = cwd
 
     async def generate(self, request: ChangelogRequest) -> ChangelogResponse:
+        """Generate changelog entries from the last tag to HEAD.
+
+        Args:
+            request: The changelog request with version range and dry-run flag.
+
+        Returns:
+            ChangelogResponse containing the list of commit messages.
+        """
         if request.dry_run:
             return ChangelogResponse(entries=["[dry-run] changelog entry"])
 

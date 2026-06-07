@@ -36,16 +36,21 @@ class _TestHandler(CommandHandler[_TestCommand]):
 
 @pytest.mark.integration
 class TestInMemoryReleaseCommandBus:
-    async def test_when_handler_registered_then_receives_command(self) -> None:
+    async def test_send_when_handler_registered_then_receives_command(self) -> None:
         bus = InMemoryReleaseCommandBus()
         handler = _TestHandler()
         await bus.register(_TestCommand, handler)  # type: ignore[arg-type]
+
         cmd = _TestCommand()
+
         await bus.send(cmd)
+
         assert len(handler.handled) == 1
         assert handler.handled[0] is cmd
 
-    async def test_when_no_handler_then_silently_ignored(self) -> None:
+    async def test_send_when_no_handler_then_silently_ignored(self) -> None:
         bus = InMemoryReleaseCommandBus()
+
         cmd = _TestCommand()
+
         await bus.send(cmd)

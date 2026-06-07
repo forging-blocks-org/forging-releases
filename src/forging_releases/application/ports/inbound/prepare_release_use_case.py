@@ -1,3 +1,5 @@
+"""Defines the inbound port (use case interface) for preparing a release."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -75,4 +77,15 @@ class PrepareReleaseUseCase(
     async def execute(
         self,
         request: PrepareReleaseInput,
-    ) -> Result[PrepareReleaseOutput, _PrepareReleaseError]: ...
+    ) -> Result[PrepareReleaseOutput, _PrepareReleaseError]:
+        """Execute the release preparation workflow.
+
+        Args:
+            request: Input DTO with the release level and dry-run flag.
+
+        Returns:
+            Ok with PrepareReleaseOutput on success,
+            Err with InvalidReleaseLevelValueError, VersionNotFoundError, or
+            CommandExecutionError on failure.
+        """
+        ...

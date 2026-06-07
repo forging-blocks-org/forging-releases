@@ -9,13 +9,13 @@ from typing import ClassVar
 import pytest
 
 
-class _PRHandler(BaseHTTPRequestHandler):
-    received_requests: ClassVar[list[dict[str, object]]] = []
+class _RequestCaptureHandler(BaseHTTPRequestHandler):
+    received: ClassVar[list[dict[str, object]]] = []
 
     def do_POST(self) -> None:
         content_length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(content_length).decode("utf-8"))
-        _PRHandler.received_requests.append(body)
+        _RequestCaptureHandler.received.append(body)
 
         self.send_response(201)
         self.send_header("Content-Type", "application/json")
@@ -29,8 +29,8 @@ class _PRHandler(BaseHTTPRequestHandler):
 
 @pytest.fixture
 def http_pr_server() -> Generator[str]:
-    _PRHandler.received_requests.clear()
-    server = HTTPServer(("127.0.0.1", 0), _PRHandler)
+    _RequestCaptureHandler.received.clear()
+    server = HTTPServer(("127.0.0.1", 0), _RequestCaptureHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     host: str = server.server_address[0]

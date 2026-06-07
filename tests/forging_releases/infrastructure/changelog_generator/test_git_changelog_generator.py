@@ -23,7 +23,7 @@ def _make_tag(repo_dir: str, tag: str) -> None:
 
 @pytest.mark.integration
 class TestGitChangelogGenerator:
-    async def test_when_commits_exist_after_tag_then_returns_entries(
+    async def test_generate_when_commits_exist_after_tag_then_returns_entries(
         self, temp_git_repo: str
     ) -> None:
         _make_commit(temp_git_repo, "feat: add login")
@@ -34,22 +34,25 @@ class TestGitChangelogGenerator:
 
         gen = GitChangelogGenerator(cwd=temp_git_repo)
         request = ChangelogRequest(from_version="1.0.0")
+
         response = await gen.generate(request)
 
         assert len(response.entries) == 2
         assert "- feat: add dashboard" in response.entries
         assert "- fix: patch security" in response.entries
 
-    async def test_when_no_tag_found_then_returns_empty(self, temp_git_repo: str) -> None:
+    async def test_generate_when_no_tag_found_then_returns_empty(self, temp_git_repo: str) -> None:
         gen = GitChangelogGenerator(cwd=temp_git_repo)
         request = ChangelogRequest(from_version="99.99.99")
+
         response = await gen.generate(request)
 
         assert response.entries == []
 
-    async def test_when_dry_run_then_returns_placeholder(self, temp_git_repo: str) -> None:
+    async def test_generate_when_dry_run_then_returns_placeholder(self, temp_git_repo: str) -> None:
         gen = GitChangelogGenerator(cwd=temp_git_repo)
         request = ChangelogRequest(from_version="1.0.0", dry_run=True)
+
         response = await gen.generate(request)
 
         assert response.entries == ["[dry-run] changelog entry"]

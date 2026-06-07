@@ -48,9 +48,7 @@ def _make_message_bus_mock() -> Mock:
 
 
 @pytest.mark.unit
-class TestPrepareReleaseServiceDryRun:
-    """Tests for the dry_run=True path."""
-
+class TestPrepareReleaseService:
     async def test_execute_when_dry_run_then_returns_ok_with_output(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
@@ -126,9 +124,6 @@ class TestPrepareReleaseServiceDryRun:
         version_control.checkout.assert_called_once_with(branch, dry_run=True)
         version_control.create_branch.assert_not_called()
 
-
-@pytest.mark.unit
-class TestPrepareReleaseServiceNormal:
     async def test_execute_when_new_branch_then_creates_and_pushes(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
@@ -139,6 +134,7 @@ class TestPrepareReleaseServiceNormal:
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
+
         current = _make_version(1, 0, 0)
         next_version = _make_version(2, 0, 0)
         branch = _make_branch(next_version)
@@ -148,6 +144,7 @@ class TestPrepareReleaseServiceNormal:
         changelog_generator.generate = AsyncMock(
             return_value=ChangelogResponse(entries=["- feat: major release"])
         )
+
         service = PrepareReleaseService(
             versioning_service=versioning_service,
             version_control=version_control,
@@ -155,8 +152,11 @@ class TestPrepareReleaseServiceNormal:
             message_bus=message_bus,
             changelog_generator=changelog_generator,
         )
+
         request = PrepareReleaseInput(level="major", dry_run=False)
+
         result = await service.execute(request)  # type: ignore[reportArgumentType]
+
         assert result.is_ok is True
         assert result.value.version == "2.0.0"
         assert result.value.branch == "release/v2.0.0"
@@ -177,6 +177,7 @@ class TestPrepareReleaseServiceNormal:
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
+
         current = _make_version(1, 0, 0)
         next_version = _make_version(1, 0, 1)
         branch = _make_branch(next_version)
@@ -184,6 +185,7 @@ class TestPrepareReleaseServiceNormal:
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = True
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
+
         service = PrepareReleaseService(
             versioning_service=versioning_service,
             version_control=version_control,
@@ -191,8 +193,11 @@ class TestPrepareReleaseServiceNormal:
             message_bus=message_bus,
             changelog_generator=changelog_generator,
         )
+
         request = PrepareReleaseInput(level="patch", dry_run=False)
+
         await service.execute(request)  # type: ignore[reportArgumentType]
+
         version_control.checkout.assert_called_once_with(branch, dry_run=False)
         version_control.create_branch.assert_not_called()
 
@@ -206,12 +211,14 @@ class TestPrepareReleaseServiceNormal:
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
+
         current = _make_version(1, 0, 0)
         next_version = _make_version(1, 0, 1)
         versioning_service.current_version.return_value = Ok(current)
         versioning_service.compute_next_version.return_value = next_version
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
+
         service = PrepareReleaseService(
             versioning_service=versioning_service,
             version_control=version_control,
@@ -219,14 +226,26 @@ class TestPrepareReleaseServiceNormal:
             message_bus=message_bus,
             changelog_generator=changelog_generator,
         )
+
         request = PrepareReleaseInput(level="patch", dry_run=False)
+
         await service.execute(request)  # type: ignore[reportArgumentType]
+
         version_control.commit_release_artifacts.assert_called_once()
 
-
-@pytest.mark.unit
-class TestPrepareReleaseServiceValueComputation:
-    async def test_execute_when_patch_level_then_computes_patch_bump(self) -> None:
+    @pytest.mark.parametrize(
+        ("level", "expected"),
+        [
+            ("patch", ReleaseVersion(1, 2, 4)),
+            ("major", ReleaseVersion(2, 0, 0)),
+            ("minor", ReleaseVersion(1, 3, 0)),
+        ],
+    )
+    async def test_execute_when_level_then_computes_correct_bump(
+        self,
+        level: str,
+        expected: ReleaseVersion,
+    ) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
         version_control.checkout.return_value = Ok(None)
@@ -236,12 +255,13 @@ class TestPrepareReleaseServiceValueComputation:
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
+
         current = _make_version(1, 2, 3)
-        next_version = _make_version(1, 2, 4)
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
+        versioning_service.compute_next_version.return_value = expected
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
+
         service = PrepareReleaseService(
             versioning_service=versioning_service,
             version_control=version_control,
@@ -249,70 +269,14 @@ class TestPrepareReleaseServiceValueComputation:
             message_bus=message_bus,
             changelog_generator=changelog_generator,
         )
-        request = PrepareReleaseInput(level="patch", dry_run=True)
+
+        request = PrepareReleaseInput(level=level, dry_run=True)
+
         result = await service.execute(request)  # type: ignore[reportArgumentType]
+
         assert result.is_ok is True
-        assert result.value.version == "1.2.4"
+        assert result.value.version == expected.value
 
-    async def test_execute_when_major_level_then_computes_major_bump(self) -> None:
-        versioning_service = Mock(spec=VersioningService)
-        version_control = Mock(spec=VersionControl)
-        version_control.checkout.return_value = Ok(None)
-        version_control.create_branch.return_value = Ok(None)
-        version_control.commit_release_artifacts.return_value = Ok(None)
-        version_control.push.return_value = Ok(None)
-        transaction = _make_transaction_mock()
-        message_bus = _make_message_bus_mock()
-        changelog_generator = Mock(spec=ChangelogGenerator)
-        current = _make_version(1, 2, 3)
-        next_version = _make_version(2, 0, 0)
-        versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
-        version_control.branch_exists.return_value = False
-        changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
-        service = PrepareReleaseService(
-            versioning_service=versioning_service,
-            version_control=version_control,
-            transaction=transaction,
-            message_bus=message_bus,
-            changelog_generator=changelog_generator,
-        )
-        request = PrepareReleaseInput(level="major", dry_run=True)
-        result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_ok is True
-        assert result.value.version == "2.0.0"
-
-    async def test_execute_when_minor_level_then_computes_minor_bump(self) -> None:
-        versioning_service = Mock(spec=VersioningService)
-        version_control = Mock(spec=VersionControl)
-        version_control.checkout.return_value = Ok(None)
-        version_control.create_branch.return_value = Ok(None)
-        version_control.commit_release_artifacts.return_value = Ok(None)
-        version_control.push.return_value = Ok(None)
-        transaction = _make_transaction_mock()
-        message_bus = _make_message_bus_mock()
-        changelog_generator = Mock(spec=ChangelogGenerator)
-        current = _make_version(1, 2, 3)
-        next_version = _make_version(1, 3, 0)
-        versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
-        version_control.branch_exists.return_value = False
-        changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
-        service = PrepareReleaseService(
-            versioning_service=versioning_service,
-            version_control=version_control,
-            transaction=transaction,
-            message_bus=message_bus,
-            changelog_generator=changelog_generator,
-        )
-        request = PrepareReleaseInput(level="minor", dry_run=True)
-        result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_ok is True
-        assert result.value.version == "1.3.0"
-
-
-@pytest.mark.unit
-class TestPrepareReleaseServiceErrorPath:
     async def test_execute_when_invalid_release_level_then_returns_err(self) -> None:
         versioning_service = Mock(spec=VersioningService)
         version_control = Mock(spec=VersionControl)
@@ -323,6 +287,7 @@ class TestPrepareReleaseServiceErrorPath:
         transaction = _make_transaction_mock()
         message_bus = _make_message_bus_mock()
         changelog_generator = Mock(spec=ChangelogGenerator)
+
         service = PrepareReleaseService(
             versioning_service=versioning_service,
             version_control=version_control,
@@ -330,8 +295,11 @@ class TestPrepareReleaseServiceErrorPath:
             message_bus=message_bus,
             changelog_generator=changelog_generator,
         )
+
         request = PrepareReleaseInput(level="invalid", dry_run=True)
+
         result = await service.execute(request)  # type: ignore[reportArgumentType]
+
         assert result.is_err is True
         assert isinstance(result.error, InvalidReleaseLevelValueError)
         assert "invalid" in result.error.message.value

@@ -1,3 +1,5 @@
+"""Defines the outbound port for coordinating commit and rollback of a release preparation."""
+
 from abc import abstractmethod
 
 from forging_blocks.application.ports.outbound.unit_of_work import UnitOfWork
@@ -14,4 +16,10 @@ class ReleaseTransaction(UnitOfWork):
     """
 
     @abstractmethod
-    def register_step(self, step: ReleaseStep) -> None: ...
+    def register_step(self, step: ReleaseStep) -> None:
+        """Register a reversible step to be compensated on rollback.
+
+        Args:
+            step: The step to register, containing the undo callable.
+        """
+        ...

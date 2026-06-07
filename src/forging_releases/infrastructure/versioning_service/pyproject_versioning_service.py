@@ -9,15 +9,29 @@ from forging_releases.application.errors import VersionNotFoundError
 from forging_releases.application.ports.outbound.versioning_service import VersioningService
 from forging_releases.domain.value_objects import ReleaseLevel, ReleaseLevelEnum, ReleaseVersion
 
+"""Versioning service backed by a pyproject.toml file."""
+
 
 class PyProjectVersioningService(VersioningService):
+    """Reads and updates the project version from pyproject.toml."""
+
     _VERSION_PATTERN = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
     _DRY_RUN_PREFIX: str = "[dry-run]"
 
     def __init__(self, *, cwd: str | None = None) -> None:
+        """Initialize the service.
+
+        Args:
+            cwd: Working directory containing pyproject.toml. Defaults to current directory.
+        """
         self._cwd = cwd
 
     def current_version(self) -> Result[ReleaseVersion, VersionNotFoundError]:
+        """Read the current version from pyproject.toml.
+
+        Returns:
+            The current ReleaseVersion, or VersionNotFoundError if missing or invalid.
+        """
         content = self._read_pyproject()
 
         match = self._VERSION_PATTERN.search(content)
@@ -34,6 +48,14 @@ class PyProjectVersioningService(VersioningService):
         return Ok(release_version)
 
     def compute_next_version(self, level: ReleaseLevel) -> ReleaseVersion:
+        """Compute the next version based on the release level.
+
+        Args:
+            level: The release level (major, minor, or patch).
+
+        Returns:
+            The computed next ReleaseVersion.
+        """
         version_result = self.current_version()
         match version_result:
             case Err():
@@ -53,6 +75,12 @@ class PyProjectVersioningService(VersioningService):
                 return ReleaseVersion(current.major, current.minor, current.patch + 1)
 
     def apply_version(self, version: ReleaseVersion, *, dry_run: bool = False) -> None:
+        """Write the given version into pyproject.toml.
+
+        Args:
+            version: The version to apply.
+            dry_run: If True, only log the intended change without writing.
+        """
         if dry_run:
             print(f"{self._DRY_RUN_PREFIX} set version = {version.value}")
             return
@@ -63,6 +91,11 @@ class PyProjectVersioningService(VersioningService):
         pyproject.write_text(new_content)
 
     def rollback_version(self, previous: ReleaseVersion) -> None:
+        """Revert to a previous version by re-applying it.
+
+        Args:
+            previous: The version to restore.
+        """
         self.apply_version(previous)
 
     def _read_pyproject(self) -> str:

@@ -1,3 +1,5 @@
+"""Defines the outbound port and DTOs for creating pull requests on a remote repository."""
+
 from abc import abstractmethod
 from dataclasses import dataclass
 

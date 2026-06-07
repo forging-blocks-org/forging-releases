@@ -9,16 +9,34 @@ from forging_releases.application.errors import CommandExecutionError
 from forging_releases.application.ports.outbound.version_control import VersionControl
 from forging_releases.domain.value_objects import ReleaseBranchName
 
+"""Git-based version control implementation."""
+
 
 class GitVersionControl(VersionControl):
+    """Manages Git branches, commits, and pushes for release workflows."""
+
     _MAIN_BRANCH: str = "main"
     _DRY_RUN_PREFIX: str = "[dry-run]"
 
     def __init__(self, *, cwd: str | None = None, main_branch: str = "main") -> None:
+        """Initialize the service.
+
+        Args:
+            cwd: Working directory of the Git repository.
+            main_branch: Name of the main branch (default "main").
+        """
         self._cwd = cwd
         self._main_branch = main_branch
 
     def branch_exists(self, branch: ReleaseBranchName) -> bool:
+        """Check whether a local branch exists.
+
+        Args:
+            branch: The branch to check.
+
+        Returns:
+            True if the local branch exists.
+        """
         result = self._run_git(
             ["rev-parse", "--verify", "--quiet", branch.value],
             check=False,
@@ -31,17 +49,39 @@ class GitVersionControl(VersionControl):
         *,
         dry_run: bool = False,
     ) -> Result[None, CommandExecutionError]:
+        """Checkout an existing branch.
+
+        Args:
+            branch: The branch to check out.
+            dry_run: If True, only log the intended command.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         return self._run_git_result(
             ["checkout", branch.value],
             dry_run=dry_run,
         )
 
     def checkout_main(self) -> Result[None, CommandExecutionError]:
+        """Checkout the main branch.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         return self._run_git_result(["checkout", self._main_branch])
 
     def commit_release_artifacts(
         self, *, dry_run: bool = False
     ) -> Result[None, CommandExecutionError]:
+        """Stage all changes and create a release commit.
+
+        Args:
+            dry_run: If True, only log the intended commands.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         add_result = self._run_git_result(
             ["add", "."],
             dry_run=dry_run,
@@ -60,12 +100,29 @@ class GitVersionControl(VersionControl):
         *,
         dry_run: bool = False,
     ) -> Result[None, CommandExecutionError]:
+        """Create and switch to a new branch.
+
+        Args:
+            branch: The name of the branch to create.
+            dry_run: If True, only log the intended command.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         return self._run_git_result(
             ["checkout", "-b", branch.value],
             dry_run=dry_run,
         )
 
     def delete_local_branch(self, branch: ReleaseBranchName) -> Result[None, CommandExecutionError]:
+        """Delete a local branch.
+
+        Args:
+            branch: The branch to delete.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         return self._run_git_result(
             ["branch", "-D", branch.value],
             check=False,
@@ -74,6 +131,14 @@ class GitVersionControl(VersionControl):
     def delete_remote_branch(
         self, branch: ReleaseBranchName
     ) -> Result[None, CommandExecutionError]:
+        """Delete a remote branch via git push.
+
+        Args:
+            branch: The branch to delete on the remote.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         return self._run_git_result(
             ["push", "origin", "--delete", branch.value],
             check=False,
@@ -85,6 +150,15 @@ class GitVersionControl(VersionControl):
         *,
         dry_run: bool = False,
     ) -> Result[None, CommandExecutionError]:
+        """Push a branch and tags to the remote.
+
+        Args:
+            branch: The branch to push.
+            dry_run: If True, only log the intended commands.
+
+        Returns:
+            Ok(None) on success, Err with CommandExecutionError on failure.
+        """
         push_result = self._run_git_result(
             ["push", "--set-upstream", "origin", branch.value],
             dry_run=dry_run,
@@ -98,6 +172,14 @@ class GitVersionControl(VersionControl):
         )
 
     def remote_branch_exists(self, branch: ReleaseBranchName) -> bool:
+        """Check whether a remote branch exists.
+
+        Args:
+            branch: The branch to check.
+
+        Returns:
+            True if the remote branch exists.
+        """
         result = self._run_git(
             ["ls-remote", "--heads", "origin", branch.value],
             check=False,

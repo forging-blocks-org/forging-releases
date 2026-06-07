@@ -1,3 +1,5 @@
+"""Defines the inbound port (use case interface) for opening a release pull request."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -57,4 +59,14 @@ class OpenReleasePullRequestUseCase(
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-    ) -> Result[OpenReleasePullRequestOutput, _OpenPRError]: ...
+    ) -> Result[OpenReleasePullRequestOutput, _OpenPRError]:
+        """Create the release pull request for the given version.
+
+        Args:
+            request: Input DTO with the version, branch, and dry-run flag.
+
+        Returns:
+            Ok with OpenReleasePullRequestOutput on success,
+            Err with InvalidVersionError or PullRequestCreationError on failure.
+        """
+        ...

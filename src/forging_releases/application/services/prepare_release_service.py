@@ -1,3 +1,5 @@
+"""Application service that orchestrates the end-to-end release preparation workflow."""
+
 from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import (
@@ -53,6 +55,15 @@ class PrepareReleaseService(PrepareReleaseUseCase):
         message_bus: ReleaseCommandBus[OpenPullRequestCommand],
         changelog_generator: ChangelogGenerator,
     ) -> None:
+        """Initialize the service with its required collaborators.
+
+        Args:
+            versioning_service: Computes and applies semantic versions.
+            version_control: Manages git operations (branch, commit, push).
+            transaction: Coordinates commit/rollback of release steps.
+            message_bus: Publishes domain commands asynchronously.
+            changelog_generator: Generates changelog entries for the release.
+        """
         self._versioning_service = versioning_service
         self._version_control = version_control
         self._transaction = transaction
@@ -63,6 +74,20 @@ class PrepareReleaseService(PrepareReleaseUseCase):
         self,
         request: PrepareReleaseInput,
     ) -> Result[PrepareReleaseOutput, PrepareReleaseError]:
+        """Execute the full release preparation workflow.
+
+        Validates the release level, computes the next version, creates or resumes
+        a release branch, bumps the version, generates changelog entries, commits
+        and pushes artifacts, and dispatches a command to open the pull request.
+
+        Args:
+            request: Input DTO containing the release level and dry-run flag.
+
+        Returns:
+            Ok with PrepareReleaseOutput on success,
+            Err with InvalidReleaseLevelValueError, VersionNotFoundError, or
+            CommandExecutionError on failure.
+        """
         match ReleaseLevel.from_str(request.level):
             case Err():
                 return Err(InvalidReleaseLevelValueError(request.level))

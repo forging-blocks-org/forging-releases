@@ -7,11 +7,20 @@ from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import CommandExecutionError
 
+"""Subprocess-based command runner with dry-run support."""
+
 
 class SubprocessCommandRunner:
+    """Runs shell commands via subprocess with error extraction and dry-run support."""
+
     _DRY_RUN_PREFIX: str = "[dry-run]"
 
     def __init__(self, *, cwd: str | None = None) -> None:
+        """Initialize the runner.
+
+        Args:
+            cwd: Default working directory for commands.
+        """
         self._cwd = cwd
 
     def run(
@@ -22,6 +31,18 @@ class SubprocessCommandRunner:
         env: dict[str, str] | None = None,
         dry_run: bool = False,
     ) -> Result[subprocess.CompletedProcess[str], CommandExecutionError]:
+        """Execute a command via subprocess.
+
+        Args:
+            cmd: The command and arguments as a list of strings.
+            cwd: Working directory override. Falls back to the default.
+            env: Optional environment variable overrides.
+            dry_run: If True, only log the intended command.
+
+        Returns:
+            Ok with the CompletedProcess on success,
+            Err with CommandExecutionError on failure.
+        """
         resolved_cwd = cwd or self._cwd
         resolved_cmd = list(cmd)
 

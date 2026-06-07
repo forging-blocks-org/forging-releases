@@ -1,3 +1,5 @@
+"""Application service responsible for creating the release pull request."""
+
 from forging_blocks.foundation import Err, Ok, Result
 
 from forging_releases.application.errors import InvalidVersionError, PullRequestCreationError
@@ -33,12 +35,29 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         *,
         pull_request_service: PullRequestService,
     ) -> None:
+        """Initialize the service with its required collaborator.
+
+        Args:
+            pull_request_service: Infrastructure service for creating pull requests.
+        """
         self._pull_request_service = pull_request_service
 
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
     ) -> Result[OpenReleasePullRequestOutput, _OpenPRError]:
+        """Open the release pull request for the given version and branch.
+
+        Validates the input, builds a ReleasePullRequest entity, and delegates
+        creation to the infrastructure pull request service.
+
+        Args:
+            request: Input DTO containing the version, branch, and dry-run flag.
+
+        Returns:
+            Ok with OpenReleasePullRequestOutput on success,
+            Err with InvalidVersionError or PullRequestCreationError on failure.
+        """
         build_result = self._build_release_pull_request(request)
         match build_result:
             case Err(error=err):

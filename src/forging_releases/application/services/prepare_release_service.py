@@ -5,6 +5,7 @@ from forging_blocks.foundation import Err, Ok, Result
 from forging_releases.application.errors import (
     CommandExecutionError,
     InvalidReleaseLevelValueError,
+    ProjectConfigurationError,
     VersionNotFoundError,
 )
 from forging_releases.application.ports.inbound import (
@@ -29,7 +30,10 @@ from forging_releases.domain.value_objects import (
 )
 
 type PrepareReleaseError = (
-    InvalidReleaseLevelValueError | VersionNotFoundError | CommandExecutionError
+    InvalidReleaseLevelValueError
+    | VersionNotFoundError
+    | CommandExecutionError
+    | ProjectConfigurationError
 )
 
 
@@ -110,8 +114,16 @@ class PrepareReleaseService(PrepareReleaseUseCase):
 
         current_version = version_result.value
         assert current_version is not None
-        next_version = self._versioning_service.compute_next_version(level)
+        next_version_result = self._versioning_service.compute_next_version(level)
+        match next_version_result:
+            case Err(error=err):
+                return Err(err)
+            case Ok(value=next_version):
+                pass
+            case _:
+                return Err(VersionNotFoundError("unknown error"))
 
+        next_version = next_version_result.value
         branch = ReleaseBranchName.create(next_version)
         tag = TagName.create(next_version)
 
@@ -162,9 +174,9 @@ class PrepareReleaseService(PrepareReleaseUseCase):
     async def _prepare_release_transactionally(
         self,
         context: ReleaseContext,
-    ) -> Result[list[str], CommandExecutionError]:
+    ) -> Result[list[str], CommandExecutionError | ProjectConfigurationError]:
         if context.dry_run:
-            return Ok(await self._prepare_release_dry_run(context))
+            return await self._prepare_release_dry_run(context)
 
         async with self._transaction:
             self._transaction.register_step(
@@ -181,7 +193,11 @@ class PrepareReleaseService(PrepareReleaseUseCase):
                 case _:
                     pass
 
-            self._apply_version(context, dry_run=False)
+            match self._apply_version(context, dry_run=False):
+                case Err() as err:
+                    return err
+                case _:
+                    pass
             changelog_entries = await self._generate_changelog(context)
 
             commit_result = self._version_control.commit_release_artifacts()
@@ -200,13 +216,19 @@ class PrepareReleaseService(PrepareReleaseUseCase):
 
         return Ok(changelog_entries)
 
-    async def _prepare_release_dry_run(self, context: ReleaseContext) -> list[str]:
+    async def _prepare_release_dry_run(
+        self, context: ReleaseContext
+    ) -> Result[list[str], CommandExecutionError | ProjectConfigurationError]:
         self._branch_handling(context, dry_run=True)
-        self._versioning_service.apply_version(context.version, dry_run=True)
+        match self._versioning_service.apply_version(context.version, dry_run=True):
+            case Err() as err:
+                return err
+            case _:
+                pass
         changelog_entries = await self._generate_changelog(context)
         self._version_control.commit_release_artifacts(dry_run=True)
         self._version_control.push(context.branch, dry_run=True)
-        return changelog_entries
+        return Ok(changelog_entries)
 
     def _branch_handling(
         self, context: ReleaseContext, *, dry_run: bool = False
@@ -226,14 +248,20 @@ class PrepareReleaseService(PrepareReleaseUseCase):
                 )
                 return Ok(None)
 
-    def _apply_version(self, context: ReleaseContext, *, dry_run: bool = False) -> None:
+    def _apply_version(
+        self, context: ReleaseContext, *, dry_run: bool = False
+    ) -> Result[None, ProjectConfigurationError]:
         self._transaction.register_step(
             ReleaseStep(
                 name="rollback_version",
                 undo=lambda: self._versioning_service.rollback_version(context.previous_version),
             )
         )
-        self._versioning_service.apply_version(context.version, dry_run=dry_run)
+        match self._versioning_service.apply_version(context.version, dry_run=dry_run):
+            case Err() as err:
+                return err
+            case _:
+                return Ok(None)
 
     async def _generate_changelog(self, context: ReleaseContext) -> list[str]:
         response = await self._changelog_generator.generate(

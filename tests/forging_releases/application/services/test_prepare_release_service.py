@@ -64,7 +64,8 @@ class TestPrepareReleaseService:
         next_version = _make_version(1, 1, 0)
 
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
+        versioning_service.compute_next_version.return_value = Ok(next_version)
+        versioning_service.apply_version.return_value = Ok(None)
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(
             return_value=ChangelogResponse(entries=["- feat: something"])
@@ -105,7 +106,8 @@ class TestPrepareReleaseService:
         branch = _make_branch(next_version)
 
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
+        versioning_service.compute_next_version.return_value = Ok(next_version)
+        versioning_service.apply_version.return_value = Ok(None)
         version_control.branch_exists.return_value = True
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
 
@@ -139,7 +141,8 @@ class TestPrepareReleaseService:
         next_version = _make_version(2, 0, 0)
         branch = _make_branch(next_version)
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
+        versioning_service.compute_next_version.return_value = Ok(next_version)
+        versioning_service.apply_version.return_value = Ok(None)
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(
             return_value=ChangelogResponse(entries=["- feat: major release"])
@@ -182,7 +185,8 @@ class TestPrepareReleaseService:
         next_version = _make_version(1, 0, 1)
         branch = _make_branch(next_version)
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
+        versioning_service.compute_next_version.return_value = Ok(next_version)
+        versioning_service.apply_version.return_value = Ok(None)
         version_control.branch_exists.return_value = True
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
 
@@ -215,7 +219,8 @@ class TestPrepareReleaseService:
         current = _make_version(1, 0, 0)
         next_version = _make_version(1, 0, 1)
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = next_version
+        versioning_service.compute_next_version.return_value = Ok(next_version)
+        versioning_service.apply_version.return_value = Ok(None)
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
 
@@ -258,7 +263,8 @@ class TestPrepareReleaseService:
 
         current = _make_version(1, 2, 3)
         versioning_service.current_version.return_value = Ok(current)
-        versioning_service.compute_next_version.return_value = expected
+        versioning_service.compute_next_version.return_value = Ok(expected)
+        versioning_service.apply_version.return_value = Ok(None)
         version_control.branch_exists.return_value = False
         changelog_generator.generate = AsyncMock(return_value=ChangelogResponse(entries=[]))
 

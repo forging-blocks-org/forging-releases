@@ -66,9 +66,10 @@ class TestPyProjectVersioningService:
     ) -> None:
         svc = PyProjectVersioningService(cwd=temp_pyproject_dir)
 
-        next_ver = svc.compute_next_version(level)
+        result = svc.compute_next_version(level)
 
-        assert next_ver == expected
+        assert result.is_ok is True
+        assert result.value == expected
 
     def test_apply_version_when_applied_then_pyproject_updated(
         self, temp_pyproject_dir: str
@@ -76,8 +77,9 @@ class TestPyProjectVersioningService:
         svc = PyProjectVersioningService(cwd=temp_pyproject_dir)
         new_version = ReleaseVersion(2, 0, 0)
 
-        svc.apply_version(new_version)
+        result = svc.apply_version(new_version)
 
+        assert result.is_ok is True
         assert read_version(str(Path(temp_pyproject_dir) / "pyproject.toml")) == "2.0.0"
 
     def test_apply_version_when_dry_run_then_pyproject_not_modified(
@@ -86,8 +88,9 @@ class TestPyProjectVersioningService:
         svc = PyProjectVersioningService(cwd=temp_pyproject_dir)
         new_version = ReleaseVersion(9, 9, 9)
 
-        svc.apply_version(new_version, dry_run=True)
+        result = svc.apply_version(new_version, dry_run=True)
 
+        assert result.is_ok is True
         assert read_version(str(Path(temp_pyproject_dir) / "pyproject.toml")) == "1.2.3"
 
     def test_apply_version_when_applied_multiple_times_then_correct_version(
@@ -95,8 +98,10 @@ class TestPyProjectVersioningService:
     ) -> None:
         svc = PyProjectVersioningService(cwd=temp_pyproject_dir)
 
-        svc.apply_version(ReleaseVersion(2, 0, 0))
-        svc.apply_version(ReleaseVersion(2, 1, 0))
+        result_a = svc.apply_version(ReleaseVersion(2, 0, 0))
+        assert result_a.is_ok is True
+        result_b = svc.apply_version(ReleaseVersion(2, 1, 0))
+        assert result_b.is_ok is True
 
         assert svc.current_version() == Ok(ReleaseVersion(2, 1, 0))
 
@@ -109,8 +114,10 @@ class TestPyProjectVersioningService:
         assert result.is_ok is True
         original = result.value
 
-        svc.apply_version(ReleaseVersion(5, 0, 0))
-        svc.rollback_version(original)
+        apply_result = svc.apply_version(ReleaseVersion(5, 0, 0))
+        assert apply_result.is_ok is True
+        rollback_result = svc.rollback_version(original)
+        assert rollback_result.is_ok is True
 
         assert svc.current_version() == Ok(original)
         assert svc.current_version().value.value == "1.2.3"

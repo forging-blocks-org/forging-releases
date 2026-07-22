@@ -1,6 +1,6 @@
 # forging-releases
 
-Release automation CLI for Forging Blocks projects.
+Release automation CLI extracted from forging-blocks project.
 
 ## Usage
 

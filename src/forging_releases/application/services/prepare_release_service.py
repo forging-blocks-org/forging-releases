@@ -1,12 +1,6 @@
-<<<<<<< Updated upstream
-from forging_blocks.foundation import Err, Ok, Result
-
-from forging_releases.application.errors import InvalidReleaseLevelValueError
-=======
 from typing import Any
 
 from forging_blocks.foundation.messages.command import Command
->>>>>>> Stashed changes
 from forging_releases.application.ports.inbound import (
     PrepareReleaseInput,
     PrepareReleaseOutput,
@@ -57,40 +51,6 @@ class PrepareReleaseService(PrepareReleaseUseCase):
         self._message_bus: ReleaseCommandBus[Command[Any]] = message_bus
         self._changelog_generator = changelog_generator
 
-<<<<<<< Updated upstream
-    async def execute(
-        self, request: PrepareReleaseInput
-    ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]:
-        match ReleaseLevel.from_str(request.level):
-            case Err():
-                return Err(InvalidReleaseLevelValueError(request.level))
-            case Ok(value=level):
-                current_version = self._versioning_service.current_version()
-                next_version = self._versioning_service.compute_next_version(level)
-
-                branch = ReleaseBranchName.create(next_version)
-                tag = TagName.create(next_version)
-
-                branch_exists = self._version_control.branch_exists(branch)
-
-                context = ReleaseContext(
-                    previous_version=current_version,
-                    version=next_version,
-                    branch=branch,
-                    tag=tag,
-                    branch_exists=branch_exists,
-                    dry_run=request.dry_run,
-                )
-
-                changelog_entries = await self._prepare_release_transactionally(context)
-
-                if not context.dry_run:
-                    await self._send_command(context)
-
-                return Ok(self._make_output(context, changelog_entries))
-            case _:
-                return Err(InvalidReleaseLevelValueError(request.level))
-=======
     async def execute(self, request: PrepareReleaseInput) -> PrepareReleaseOutput:
         level = ReleaseLevel.from_str(request.level)
 
@@ -117,7 +77,6 @@ class PrepareReleaseService(PrepareReleaseUseCase):
             await self._send_command(context)
 
         return self._make_output(context, changelog_entries)
->>>>>>> Stashed changes
 
     def _make_output(
         self, context: ReleaseContext, changelog_entries: list[str]

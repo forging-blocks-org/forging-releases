@@ -1,12 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 
-<<<<<<< Updated upstream
-from forging_blocks.foundation import OutputPort
-
-=======
 from forging_blocks.foundation.ports import OutboundPort
->>>>>>> Stashed changes
 from forging_releases.domain.entities import ReleasePullRequest
 
 

@@ -52,9 +52,7 @@ typeCheckingMode = "strict"
 include = ["src", "tests"]
 exclude = ["**/__pycache__", ".venv", "build", "dist"]
 reportMissingTypeStubs = "warning"
-<<<<<<< Updated upstream
 reportUnknownMemberType = "none"
-=======
 venvPath = "."
 venv = ".venv"
 
@@ -89,4 +87,3 @@ select = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["forging_releases"]
->>>>>>> Stashed changes

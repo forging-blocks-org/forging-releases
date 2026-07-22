@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-from collections.abc import Hashable
-=======
 from __future__ import annotations
-
->>>>>>> Stashed changes
 from enum import StrEnum, auto
 from typing import Hashable
 
@@ -25,11 +20,7 @@ class ReleaseLevel(ValueObject[ReleaseLevelEnum]):
         self._level = level
 
     @classmethod
-<<<<<<< Updated upstream
-    def from_str(cls, value: str) -> Result[Self, InvalidReleaseLevelError]:
-=======
     def from_str(cls, value: str) -> ReleaseLevel:
->>>>>>> Stashed changes
         if value.lower() not in ReleaseLevelEnum:
             raise InvalidReleaseLevelError(value)
         return cls(ReleaseLevelEnum[value.upper()])

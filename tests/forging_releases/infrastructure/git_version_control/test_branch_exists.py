@@ -8,9 +8,12 @@ from forging_releases.infrastructure.git_version_control import GitVersionContro
 
 @pytest.mark.integration
 class TestBranchExists:
-    def test_when_branch_is_main_then_returns_true(self, temp_git_repo: str) -> None:
+    def test_when_branch_is_created_then_returns_true(
+        self, temp_git_repo: str, branch_name: ReleaseBranchName
+    ) -> None:
         vc = GitVersionControl(cwd=temp_git_repo)
-        result = vc.branch_exists(ReleaseBranchName("main"))
+        vc.create_branch(branch_name)
+        result = vc.branch_exists(branch_name)
         assert result is True
 
     def test_when_branch_does_not_exist_then_returns_false(

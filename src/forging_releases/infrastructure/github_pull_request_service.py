@@ -34,7 +34,7 @@ class GitHubPullRequestService(PullRequestService):
             {
                 "title": pull_request.title,
                 "head": pull_request.head.value,
-                "base": pull_request.base.value,
+                "base": pull_request.base,
                 "body": pull_request.body,
             }
         ).encode("utf-8")

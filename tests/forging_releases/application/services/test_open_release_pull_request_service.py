@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from forging_releases.application.errors import InvalidVersionError
+from forging_releases.domain.errors.invalid_release_version_error import InvalidReleaseVersionError
 from forging_releases.application.ports.inbound.open_release_pull_request_use_case import (
     OpenReleasePullRequestInput,
 )
@@ -30,9 +30,8 @@ class TestOpenReleasePullRequestService:
 
         result = await service.execute(request)  # type: ignore[reportArgumentType]
 
-        assert result.is_ok is True
-        assert result.value.pr_id is None
-        assert result.value.url is None
+        assert result.pr_id is None
+        assert result.url is None
         pull_request_service.open.assert_not_called()
 
     async def test_execute_when_not_dry_run_then_calls_pull_request_service(self) -> None:
@@ -49,9 +48,8 @@ class TestOpenReleasePullRequestService:
 
         result = await service.execute(request)  # type: ignore[reportArgumentType]
 
-        assert result.is_ok is True
-        assert result.value.pr_id == "42"
-        assert result.value.url == "https://github.com/org/repo/pull/42"
+        assert result.pr_id == "42"
+        assert result.url == "https://github.com/org/repo/pull/42"
         pull_request_service.open.assert_called_once()
 
     async def test_execute_when_pull_request_service_returns_none_ids_then_mapped(self) -> None:
@@ -68,11 +66,10 @@ class TestOpenReleasePullRequestService:
 
         result = await service.execute(request)  # type: ignore[reportArgumentType]
 
-        assert result.is_ok is True
-        assert result.value.pr_id is None
-        assert result.value.url is None
+        assert result.pr_id is None
+        assert result.url is None
 
-    async def test_execute_when_invalid_version_then_returns_err(self) -> None:
+    async def test_execute_when_invalid_version_then_raises_error(self) -> None:
         pull_request_service = Mock(spec=PullRequestService)
         service = OpenReleasePullRequestService(
             pull_request_service=pull_request_service,
@@ -82,8 +79,5 @@ class TestOpenReleasePullRequestService:
             version="not-a-version", branch="release/v1.0.0", dry_run=True
         )
 
-        result = await service.execute(request)  # type: ignore[reportArgumentType]
-
-        assert result.is_err is True
-        assert isinstance(result.error, InvalidVersionError)
-        assert "not-a-version" in result.error.message.value
+        with pytest.raises(InvalidReleaseVersionError, match="not-a-version"):
+            await service.execute(request)  # type: ignore[reportArgumentType]

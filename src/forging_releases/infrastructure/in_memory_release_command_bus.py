@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from forging_blocks.application.ports.inbound.message_handler import CommandHandler
+from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
 from forging_blocks.foundation.messages.command import Command
 
 from forging_releases.application.ports.outbound.release_command_bus import ReleaseCommandBus
@@ -19,7 +19,7 @@ class InMemoryReleaseCommandBus(ReleaseCommandBus[Command[object]]):
     async def register(
         self,
         command_type: type[Command[object]],
-        handler: CommandHandler[Command[object]],
+        handler: MessageHandlerPort[Command[object], None],
     ) -> None:
         self._handlers[command_type] = handler  # type: ignore[assignment]
 

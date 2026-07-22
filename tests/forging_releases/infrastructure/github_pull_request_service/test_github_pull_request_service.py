@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import pytest
 
 from forging_releases.domain.entities import ReleasePullRequest
-from forging_releases.domain.value_objects import ReleaseBaseBranchName, ReleaseBranchName
+from forging_releases.domain.value_objects import ReleaseBranchName
 from forging_releases.infrastructure.github_pull_request_service import (
     GitHubPullRequestService,
 )
@@ -57,12 +57,11 @@ class TestGitHubPullRequestService:
             token="fake-token",
             base_url=test_http_server,
         )
-        pr = ReleasePullRequest.create(
-            base=ReleaseBaseBranchName("release/v0.0.0"),
+        pr = ReleasePullRequest(
+            base="main",
             head=ReleaseBranchName("release/v1.0.0"),
             title="Release v1.0.0",
             body="Automated release",
-            external_id=None,
         )
 
         output = svc.open(pr)
@@ -82,12 +81,11 @@ class TestGitHubPullRequestService:
             token="fake-token",
             base_url="http://127.0.0.1:1",
         )
-        pr = ReleasePullRequest.create(
-            base=ReleaseBaseBranchName("release/v0.0.0"),
+        pr = ReleasePullRequest(
+            base="main",
             head=ReleaseBranchName("release/v1.0.0"),
             title="Release v1.0.0",
             body="Automated release",
-            external_id=None,
         )
 
         with pytest.raises((RuntimeError, OSError)):

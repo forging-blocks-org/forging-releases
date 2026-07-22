@@ -2,7 +2,7 @@
 
 import pytest
 
-from forging_blocks.application.ports.inbound.message_handler import CommandHandler
+from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
 from forging_blocks.foundation.messages.command import Command
 
 from forging_releases.infrastructure.in_memory_release_command_bus import (
@@ -26,7 +26,7 @@ class _TestCommand(Command[PayloadType]):
         return self._val
 
 
-class _TestHandler(CommandHandler[_TestCommand]):
+class _TestHandler(MessageHandlerPort[_TestCommand, None]):
     def __init__(self) -> None:
         self.handled: list[_TestCommand] = []
 

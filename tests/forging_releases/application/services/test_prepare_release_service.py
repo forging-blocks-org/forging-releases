@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from forging_releases.application.errors import InvalidReleaseLevelValueError
+from forging_releases.domain.errors import InvalidReleaseLevelError
 from forging_releases.application.ports.inbound.prepare_release_use_case import (
     PrepareReleaseInput,
 )
@@ -78,11 +78,10 @@ class TestPrepareReleaseServiceDryRun:
 
         result = await service.execute(request)  # type: ignore[reportArgumentType]
 
-        assert result.is_ok is True
-        assert result.value.version == "1.1.0"
-        assert result.value.branch == "release/v1.1.0"
-        assert result.value.tag == "v1.1.0"
-        assert result.value.changelog_entries == ["- feat: something"]
+        assert result.version == "1.1.0"
+        assert result.branch == "release/v1.1.0"
+        assert result.tag == "v1.1.0"
+        assert result.changelog_entries == ["- feat: something"]
         message_bus.send.assert_not_called()
 
     async def test_execute_when_dry_run_branch_exists_then_checkout_not_create(self) -> None:
@@ -143,11 +142,10 @@ class TestPrepareReleaseServiceNormal:
         )
         request = PrepareReleaseInput(level="major", dry_run=False)
         result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_ok is True
-        assert result.value.version == "2.0.0"
-        assert result.value.branch == "release/v2.0.0"
-        assert result.value.tag == "v2.0.0"
-        assert result.value.changelog_entries == ["- feat: major release"]
+        assert result.version == "2.0.0"
+        assert result.branch == "release/v2.0.0"
+        assert result.tag == "v2.0.0"
+        assert result.changelog_entries == ["- feat: major release"]
         version_control.create_branch.assert_called_once_with(branch, dry_run=False)
         version_control.checkout.assert_not_called()
         version_control.push.assert_called_once_with(branch)
@@ -225,8 +223,7 @@ class TestPrepareReleaseServiceValueComputation:
         )
         request = PrepareReleaseInput(level="patch", dry_run=True)
         result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_ok is True
-        assert result.value.version == "1.2.4"
+        assert result.version == "1.2.4"
 
     async def test_execute_when_major_level_then_computes_major_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
@@ -249,8 +246,7 @@ class TestPrepareReleaseServiceValueComputation:
         )
         request = PrepareReleaseInput(level="major", dry_run=True)
         result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_ok is True
-        assert result.value.version == "2.0.0"
+        assert result.version == "2.0.0"
 
     async def test_execute_when_minor_level_then_computes_minor_bump(self) -> None:
         versioning_service = Mock(spec=VersioningService)
@@ -273,8 +269,7 @@ class TestPrepareReleaseServiceValueComputation:
         )
         request = PrepareReleaseInput(level="minor", dry_run=True)
         result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_ok is True
-        assert result.value.version == "1.3.0"
+        assert result.version == "1.3.0"
 
 
 @pytest.mark.unit
@@ -293,7 +288,6 @@ class TestPrepareReleaseServiceErrorPath:
             changelog_generator=changelog_generator,
         )
         request = PrepareReleaseInput(level="invalid", dry_run=True)
-        result = await service.execute(request)  # type: ignore[reportArgumentType]
-        assert result.is_err is True
-        assert isinstance(result.error, InvalidReleaseLevelValueError)
-        assert "invalid" in result.error.message.value
+        with pytest.raises(InvalidReleaseLevelError) as exc_info:
+            await service.execute(request)  # type: ignore[reportArgumentType]
+        assert "invalid" in str(exc_info.value)

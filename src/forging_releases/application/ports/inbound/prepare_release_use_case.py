@@ -3,14 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass, field
 
-<<<<<<< Updated upstream
-from forging_blocks.application.ports import UseCase
-from forging_blocks.foundation import Result
-
-from forging_releases.application.errors import InvalidReleaseLevelValueError
-=======
 from forging_blocks.application.ports import UseCasePort
->>>>>>> Stashed changes
 
 
 @dataclass(frozen=True)
@@ -47,13 +40,7 @@ class PrepareReleaseOutput:
     changelog_entries: list[str] = field(default_factory=lambda: [])
 
 
-<<<<<<< Updated upstream
-class PrepareReleaseUseCase(
-    UseCase[PrepareReleaseInput, Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]]
-):
-=======
 class PrepareReleaseUseCase(UseCasePort[PrepareReleaseInput, PrepareReleaseOutput]):
->>>>>>> Stashed changes
     """Prepares a release from the main branch.
 
     Responsibilities:
@@ -74,8 +61,4 @@ class PrepareReleaseUseCase(UseCasePort[PrepareReleaseInput, PrepareReleaseOutpu
     async def execute(
         self,
         request: PrepareReleaseInput,
-<<<<<<< Updated upstream
-    ) -> Result[PrepareReleaseOutput, InvalidReleaseLevelValueError]: ...
-=======
     ) -> PrepareReleaseOutput: ...
->>>>>>> Stashed changes

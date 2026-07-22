@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
+from forging_releases.domain.errors import InvalidReleaseVersionError
 
 from forging_releases.application.ports.outbound.versioning_service import VersioningService
 from forging_releases.domain.value_objects import ReleaseLevel, ReleaseLevelEnum, ReleaseVersion
@@ -19,10 +19,10 @@ class PyProjectVersioningService(VersioningService):
     def current_version(self) -> ReleaseVersion:
         content = self._pyproject_path.read_text()
         version_str = self._extract_version(content)
-        result = ReleaseVersion.from_str(version_str)
-        if result.is_err:
+        try:
+            return ReleaseVersion.from_str(version_str)
+        except InvalidReleaseVersionError:
             raise ValueError(f"Invalid version in pyproject.toml: {version_str}")
-        return cast(ReleaseVersion, result.value)
 
     def compute_next_version(self, level: ReleaseLevel) -> ReleaseVersion:
         current = self.current_version()

@@ -1,11 +1,6 @@
-<<<<<<< Updated upstream
-from collections.abc import Hashable
-from typing import Self
-=======
 from __future__ import annotations
 
 from typing import Hashable
->>>>>>> Stashed changes
 
 from forging_blocks.domain import ValueObject
 from forging_releases.domain.errors import InvalidReleaseVersionError
@@ -25,17 +20,7 @@ class ReleaseVersion(ValueObject[str]):
         self._patch = patch
 
     @classmethod
-<<<<<<< Updated upstream
-    def create(cls, major: int, minor: int, patch: int) -> Result[Self, InvalidReleaseVersionError]:
-        if min(major, minor, patch) < 0:
-            return Err(InvalidReleaseVersionError(f"{major}.{minor}.{patch}"))
-        return Ok(cls(major, minor, patch))
-
-    @classmethod
-    def from_str(cls, raw_value: str) -> Result[Self, InvalidReleaseVersionError]:
-=======
     def from_str(cls, raw_value: str) -> ReleaseVersion:
->>>>>>> Stashed changes
         try:
             major, minor, patch = map(int, raw_value.split("."))
             return cls(major, minor, patch)

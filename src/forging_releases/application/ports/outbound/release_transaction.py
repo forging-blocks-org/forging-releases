@@ -14,8 +14,6 @@ class ReleaseTransaction(UnitOfWorkPort):
     - reverse-order compensation
     """
 
-<<<<<<< Updated upstream
-=======
     async def __aenter__(self) -> Self:
         """Enter the transaction context."""
         return self
@@ -34,7 +32,5 @@ class ReleaseTransaction(UnitOfWorkPort):
             await self.commit()
         else:
             await self.rollback()
-
->>>>>>> Stashed changes
     @abstractmethod
     def register_step(self, step: ReleaseStep) -> None: ...

@@ -3,14 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 
-<<<<<<< Updated upstream
-from forging_blocks.application.ports import UseCase
-from forging_blocks.foundation import Result
-
-from forging_releases.application.errors import InvalidVersionError
-=======
 from forging_blocks.application.ports import UseCasePort
->>>>>>> Stashed changes
 
 
 @dataclass(frozen=True)
@@ -43,11 +36,7 @@ class OpenReleasePullRequestOutput:
 class OpenReleasePullRequestUseCase(
     UseCasePort[
         OpenReleasePullRequestInput,
-<<<<<<< Updated upstream
-        Result[OpenReleasePullRequestOutput, InvalidVersionError],
-=======
         OpenReleasePullRequestOutput,
->>>>>>> Stashed changes
     ]
 ):
     """Creates the release pull request representing
@@ -62,8 +51,4 @@ class OpenReleasePullRequestUseCase(
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-<<<<<<< Updated upstream
-    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]: ...
-=======
     ) -> OpenReleasePullRequestOutput: ...
->>>>>>> Stashed changes

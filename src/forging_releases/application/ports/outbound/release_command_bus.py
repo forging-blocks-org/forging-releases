@@ -1,14 +1,7 @@
-<<<<<<< Updated upstream
-from typing import Protocol, TypeVar
-
-from forging_blocks.application.ports.inbound.message_handler import CommandHandler
-from forging_blocks.application.ports.outbound.message_bus import MessageBus
-=======
 from typing import Any, Generic, TypeVar
 
 from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
 from forging_blocks.application.ports.outbound.message_bus_port import MessageBusPort
->>>>>>> Stashed changes
 from forging_blocks.foundation.messages.command import Command
 
 CommandType = TypeVar("CommandType", bound=Command[Any], contravariant=True)

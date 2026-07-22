@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-from forging_blocks.foundation import Err, Ok, Result
 
-from forging_releases.application.errors import InvalidVersionError
-=======
->>>>>>> Stashed changes
 from forging_releases.application.ports.inbound import (
     OpenReleasePullRequestInput,
     OpenReleasePullRequestOutput,
@@ -38,31 +33,6 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
     async def execute(
         self,
         request: OpenReleasePullRequestInput,
-<<<<<<< Updated upstream
-    ) -> Result[OpenReleasePullRequestOutput, InvalidVersionError]:
-        match self._build_release_pull_request(request):
-            case Err(error=err):
-                return Err(err)
-            case Ok(value=pull_request):
-                if request.dry_run:
-                    return Ok(
-                        OpenReleasePullRequestOutput(
-                            pr_id=None,
-                            url=None,
-                        )
-                    )
-
-                output = self._pull_request_service.open(pull_request)
-
-                return Ok(
-                    OpenReleasePullRequestOutput(
-                        pr_id=output.pr_id,
-                        url=output.url,
-                    )
-                )
-            case _:
-                return Err(InvalidVersionError(request.version))
-=======
     ) -> OpenReleasePullRequestOutput:
         pull_request = self._build_release_pull_request(request)
 
@@ -78,7 +48,6 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
             pr_id=output.pr_id,
             url=output.url,
         )
->>>>>>> Stashed changes
 
     def _build_release_pull_request(
         self,

@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-=======
 from typing import Self, TypeAlias, cast
-
->>>>>>> Stashed changes
 from forging_blocks.foundation.messages.command import Command
 from forging_blocks.foundation.messages.message import MessageMetadata
 
@@ -10,13 +6,9 @@ PayloadType: TypeAlias = dict[str, str | bool]
 
 
 class OpenPullRequestCommand(Command[PayloadType]):
-<<<<<<< Updated upstream
-    def __init__(self, *, version: str, branch: str, dry_run: bool) -> None:
-=======
     def __init__(
         self, *, version: str, branch: str, dry_run: bool, metadata: MessageMetadata | None = None
     ) -> None:
->>>>>>> Stashed changes
         self._version = version
         self._branch = branch
         self._dry_run = dry_run

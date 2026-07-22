@@ -58,7 +58,7 @@ build-backend = "hatchling.build"
 @pytest.fixture
 def git_repo_with_remote(
     git_repo: GitTestRepository, tmp_path_factory: pytest.TempPathFactory
-) -> GitTestRepository:
+) -> str:
     """Adds a bare git remote (origin) to the repo and pushes main."""
     import subprocess
 
@@ -74,4 +74,4 @@ def git_repo_with_remote(
         check=True,
         capture_output=True,
     )
-    return git_repo
+    return str(git_repo.path)

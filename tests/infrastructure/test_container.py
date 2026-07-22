@@ -1,0 +1,25 @@
+# pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
+import pytest
+from forging_releases.application.services.open_release_pull_request_service import (
+    OpenReleasePullRequestService,
+)
+from forging_releases.application.services.prepare_release_service import (
+    PrepareReleaseService,
+)
+from forging_releases.infrastructure.container import Container
+
+
+@pytest.mark.unit
+class TestContainer:
+    async def test_prepare_release_use_case_factory(self) -> None:
+        container = Container()
+        await container.initialize()
+        use_case = container.get_prepare_release_use_case()
+
+        assert isinstance(use_case, PrepareReleaseService)
+
+    def test_open_release_pull_request_use_case_factory(self) -> None:
+        container = Container()
+        use_case = container.get_open_release_pull_request_use_case()
+
+        assert isinstance(use_case, OpenReleasePullRequestService)

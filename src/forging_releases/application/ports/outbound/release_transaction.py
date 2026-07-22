@@ -1,0 +1,40 @@
+from abc import abstractmethod
+from types import TracebackType
+from typing import Self
+
+from forging_blocks.application.ports.outbound.unit_of_work_port import UnitOfWorkPort
+from forging_releases.application.workflow import ReleaseStep
+
+
+class ReleaseTransaction(UnitOfWorkPort):
+    """Coordinates commit / rollback of a release preparation.
+
+    Guarantees:
+    - rollback on any exception
+    - reverse-order compensation
+    """
+
+<<<<<<< Updated upstream
+=======
+    async def __aenter__(self) -> Self:
+        """Enter the transaction context."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Exit the transaction context.
+
+        Commits if no exception occurred; otherwise rolls back.
+        """
+        if exc_type is None:
+            await self.commit()
+        else:
+            await self.rollback()
+
+>>>>>>> Stashed changes
+    @abstractmethod
+    def register_step(self, step: ReleaseStep) -> None: ...

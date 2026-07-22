@@ -1,0 +1,92 @@
+[project]
+name = "forging-releases"
+version = "0.1.0"
+description = "Release automation CLI for Forging Blocks projects"
+readme = "README.md"
+requires-python = ">=3.14"
+license = "MIT"
+keywords = ["release", "automation", "cli", "forging-blocks"]
+dependencies = [
+    "click>=8.4.2",
+    "forging-blocks>=0.4.0",
+    "tomlkit>=0.15.1",
+]
+
+[tool.uv.sources]
+forging-blocks = { path = "../forging-blocks", editable = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.11.0",
+    "pyright>=1.1.410",
+]
+
+[project.scripts]
+forging-releases = "forging_releases.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+]
+
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+    "e2e: end-to-end tests",
+]
+
+[tool.pyright]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+include = ["src", "tests"]
+exclude = ["**/__pycache__", ".venv", "build", "dist"]
+reportMissingTypeStubs = "warning"
+<<<<<<< Updated upstream
+reportUnknownMemberType = "none"
+=======
+venvPath = "."
+venv = ".venv"
+
+[tool.coverage.run]
+source_pkgs = ["forging_releases"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+exclude_also = [
+    "@abstractmethod",
+    "if TYPE_CHECKING:",
+    "def __repr__",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["forging_releases"]
+>>>>>>> Stashed changes

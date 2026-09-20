@@ -81,3 +81,27 @@ class TestOpenReleasePullRequestService:
 
         with pytest.raises(InvalidReleaseVersionError, match="not-a-version"):
             await service.execute(request)  # type: ignore[reportArgumentType]
+
+    async def test_execute_uses_configured_base_branch_and_release_prefix(self) -> None:
+        pull_request_service = Mock(spec=PullRequestService)
+        pull_request_service.open.return_value = OpenPullRequestOutput(
+            pr_id="42",
+            url="https://github.com/org/repo/pull/42",
+        )
+        service = OpenReleasePullRequestService(
+            pull_request_service=pull_request_service,
+            base_branch="trunk",
+            release_branch_prefix="stable/",
+        )
+
+        await service.execute(
+            OpenReleasePullRequestInput(
+                version="1.0.0",
+                branch="stable/1.0.0",
+                dry_run=False,
+            )
+        )
+
+        pull_request = pull_request_service.open.call_args.args[0]
+        assert pull_request.base == "trunk"
+        assert pull_request.head.value == "stable/1.0.0"

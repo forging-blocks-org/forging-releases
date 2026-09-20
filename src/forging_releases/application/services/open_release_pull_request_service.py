@@ -27,8 +27,12 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         self,
         *,
         pull_request_service: PullRequestService,
+        base_branch: str = "main",
+        release_branch_prefix: str = "release/v",
     ) -> None:
         self._pull_request_service = pull_request_service
+        self._base_branch = base_branch
+        self._release_branch_prefix = release_branch_prefix
 
     async def execute(
         self,
@@ -54,10 +58,13 @@ class OpenReleasePullRequestService(OpenReleasePullRequestUseCase):
         request: OpenReleasePullRequestInput,
     ) -> ReleasePullRequest:
         release_version = ReleaseVersion.from_str(request.version)
-        branch = ReleaseBranchName(request.branch)
+        branch = ReleaseBranchName(
+            request.branch,
+            prefix=self._release_branch_prefix,
+        )
 
         return ReleasePullRequest(
-            base="main",
+            base=self._base_branch,
             head=branch,
             title=f"Release v{release_version.value}",
             body=f"Automated release pull request for version {release_version.value}.",

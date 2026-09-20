@@ -1,28 +1,32 @@
-# pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
-from typing import Any
+from typing import Any, Self
 
 import pytest
+from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
+from forging_blocks.domain.messages.command import Command
+from forging_blocks.domain.messages.message import MessageMetadata
 from forging_releases.infrastructure.bus.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
 )
 
-from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
-from forging_blocks.foundation.messages.command import Command
 
-
-class FakeCommand(Command):
+class FakeCommand(Command[str]):
     """Minimal concrete Command for registration and routing tests."""
 
     def __init__(self, val: str = "test") -> None:
-        super().__init__()
         self._value = val
+        super().__init__()
 
     @property
     def value(self) -> str:
         return self._value
 
-    def _payload(self) -> dict[str, Any]:
-        return {"value": self._value}
+    @property
+    def _payload(self) -> str:
+        return self._value
+
+    @classmethod
+    def from_payload_fields(cls, data: str, metadata: MessageMetadata) -> Self:
+        return cls(data)
 
 
 class FakeHandler(MessageHandlerPort[FakeCommand, None]):
@@ -57,7 +61,7 @@ class TestInMemoryReleaseCommandBus:
     ) -> None:
         await bus.register(FakeCommand, handler)
 
-        assert bus._subscribers[FakeCommand] is handler
+        assert getattr(bus, "_subscribers")[FakeCommand] is handler
 
     async def test_send_when_no_subscribers_then_key_error(
         self,
@@ -86,9 +90,7 @@ class TestInMemoryReleaseCommandBus:
         handler: FakeHandler,
         command: FakeCommand,
     ) -> None:
-        await bus.register(FakeCommand, handler)
-
-        class OtherCommand(Command):
+        class OtherCommand(Command[str]):
             def __init__(self, val: str = "other") -> None:
                 super().__init__()
                 self._value = val
@@ -97,8 +99,13 @@ class TestInMemoryReleaseCommandBus:
             def value(self) -> str:
                 return self._value
 
-            def _payload(self) -> dict[str, Any]:
-                return {"value": self._value}
+            @property
+            def _payload(self) -> str:
+                return self._value
+
+            @classmethod
+            def from_payload_fields(cls, data: str, metadata: MessageMetadata) -> Self:
+                return cls(data)
 
         with pytest.raises(KeyError):
             await bus.send(OtherCommand())

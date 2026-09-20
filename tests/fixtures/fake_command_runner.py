@@ -5,29 +5,30 @@ behaviour through recorded calls and configured outputs, not
 through mock interaction assertions.
 """
 
-from forging_releases.infrastructure.commons.process import CommandRunner
+from collections.abc import Sequence
+
+from forging_releases.application.ports.outbound import CommandRunner
 
 
 class FakeCommandRunner(CommandRunner):
     """State-based CommandRunner fake.
 
     ``responses`` is an ordered list — each ``run()`` call pops the
-    first entry.  Entries may be a ``str`` (success) or an
+    first entry. Entries may be a ``str`` (success) or an
     ``Exception`` to raise.
     """
 
     def __init__(self, *configured_outputs: str | Exception) -> None:
         self.configured_outputs: list[str | Exception] = list(configured_outputs)
-        self.calls: list[tuple[list[str], bool, bool]] = []
+        self.calls: list[tuple[list[str], bool]] = []
 
     def run(
         self,
-        cmd: list[str],
+        command: Sequence[str],
         *,
         check: bool = True,
-        suppress_error_log: bool = False,
     ) -> str:
-        self.calls.append((cmd, check, suppress_error_log))
+        self.calls.append((list(command), check))
 
         if not self.configured_outputs:
             return ""

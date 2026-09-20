@@ -1,3 +1,4 @@
+from forging_releases.application.ports.outbound.command_runner import CommandRunner
 from forging_releases.application.ports.outbound.changelog_generator import (
     ChangelogGenerator,
     ChangelogRequest,
@@ -13,6 +14,7 @@ from forging_releases.application.ports.outbound.version_control import VersionC
 from forging_releases.application.ports.outbound.versioning_service import VersioningService
 
 __all__ = (
+    "CommandRunner",
     "OpenPullRequestOutput",
     "PullRequestService",
     "ReleaseTransaction",

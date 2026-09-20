@@ -3,12 +3,14 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+from collections.abc import Sequence
 from pathlib import Path
 
-from forging_releases.infrastructure.commons.process import CommandRunner
+from forging_releases.application.errors import CommandExecutionError
+from forging_releases.application.ports.outbound import CommandRunner
 
 # When running inside a git hook (e.g. pre-push via pre-commit), GIT_DIR and
-# related env vars point at the main repository.  These leak into test fixtures
+# related env vars point at the main repository. These leak into test fixtures
 # that create ephemeral git repos in temp directories and break git operations.
 # We remove them from the subprocess environment so that git uses the cwd-based
 # repo discovery instead.
@@ -34,17 +36,16 @@ class ScopedCommandRunner(CommandRunner):
 
     def run(
         self,
-        cmd: list[str],
+        command: Sequence[str],
         *,
         check: bool = True,
-        suppress_error_log: bool = False,
     ) -> str:
         """Run a command in the specified working directory."""
-        logging.debug(f"Running command in {self._cwd}: {' '.join(cmd)}")
+        logging.debug("Running command in %s: %s", self._cwd, " ".join(command))
 
         try:
             result = subprocess.run(
-                cmd,
+                command,
                 cwd=self._cwd,
                 check=check,
                 text=True,
@@ -52,8 +53,13 @@ class ScopedCommandRunner(CommandRunner):
                 stderr=subprocess.PIPE,
                 env=SANITIZED_ENV,
             )
-            return result.stdout.strip()
         except subprocess.CalledProcessError as exc:
-            log_level = logging.DEBUG if suppress_error_log else logging.ERROR
-            logging.log(log_level, f"Command failed: {' '.join(cmd)}\n{exc.stderr}")
-            raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{exc.stderr}") from exc
+            stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+            stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+            raise CommandExecutionError(
+                tuple(command),
+                exc.returncode,
+                stdout,
+                stderr,
+            ) from exc
+        return result.stdout

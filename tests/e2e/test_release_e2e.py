@@ -27,7 +27,7 @@ from forging_releases.infrastructure.bus.in_memory_release_command_bus import (
 from forging_releases.infrastructure.changelog.git_cliff_changelog_generator import (
     GitCliffChangelogGenerator,
 )
-from forging_releases.infrastructure.git.git_version_control import GitVersionControl
+from forging_releases.infrastructure.vcs.git.git_version_control import GitVersionControl
 from forging_releases.infrastructure.handlers.open_pull_request_handler import (
     OpenPullRequestHandler,
 )
@@ -140,7 +140,10 @@ def versioning_service(git_repo_with_pyproject):
 
 @pytest.fixture
 def changelog_generator(git_repo_with_pyproject):
-    return GitCliffChangelogGenerator(git_repo_with_pyproject.scoped_runner())
+    return GitCliffChangelogGenerator(
+        git_repo_with_pyproject.scoped_runner(),
+        cliff_config_path=Path(__file__).resolve().parents[2] / "cliff.toml",
+    )
 
 
 @pytest.fixture
@@ -244,6 +247,7 @@ class TestReleaseWorkflow:
         generator = GitCliffChangelogGenerator(
             runner=git_repo_with_pyproject.scoped_runner(),
             changelog_path=git_repo_with_pyproject.path / "CHANGELOG.md",
+            cliff_config_path=Path(__file__).resolve().parents[2] / "cliff.toml",
         )
 
         result = await generator.generate(ChangelogRequest(from_version="0.1.0"))

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from forging_releases.application.services.open_release_pull_request_service import (
     OpenReleasePullRequestService,
 )
@@ -13,8 +15,10 @@ from forging_releases.infrastructure.bus.in_memory_release_command_bus import (
 from forging_releases.infrastructure.changelog.git_cliff_changelog_generator import (
     GitCliffChangelogGenerator,
 )
+from forging_releases.application.ports.outbound import CommandRunner
 from forging_releases.infrastructure.commons.process import SubprocessCommandRunner
-from forging_releases.infrastructure.git.git_version_control import GitVersionControl
+from forging_releases.infrastructure.configuration import ReleaseConfiguration
+from forging_releases.infrastructure.vcs.git.git_version_control import GitVersionControl
 from forging_releases.infrastructure.github.github_cli_pull_request_service import (
     GitHubCliPullRequestService,
 )
@@ -27,18 +31,37 @@ from forging_releases.infrastructure.versioning.pyproject_versioning_service imp
 )
 
 
+def _resolve_path(path: Path, *, cwd: Path) -> Path:
+    return path if path.is_absolute() else cwd / path
+
+
 class Container:
     """Composition root."""
 
-    def __init__(self) -> None:
-        from pathlib import Path
+    def __init__(
+        self,
+        configuration: ReleaseConfiguration | None = None,
+    ) -> None:
+        configuration = configuration or ReleaseConfiguration()
+        cwd = Path.cwd()
+        project_file = _resolve_path(configuration.project_file, cwd=cwd)
+        changelog_file = _resolve_path(configuration.changelog_file, cwd=cwd)
+        cliff_config_file = _resolve_path(configuration.cliff_config_file, cwd=cwd)
+        self._configuration: ReleaseConfiguration = configuration
 
-        self._command_runner = SubprocessCommandRunner()
-        self._versioning_service = PyProjectVersioningService(
-            Path.cwd() / "pyproject.toml"
+        self._command_runner: CommandRunner = SubprocessCommandRunner()
+        self._versioning_service = PyProjectVersioningService(project_file)
+        self._version_control = GitVersionControl(
+            self._command_runner,
+            base_branch=configuration.base_branch,
+            remote=configuration.remote,
+            release_branch_prefix=configuration.release_branch_prefix,
         )
-        self._version_control = GitVersionControl(self._command_runner)
-        self._changelog_generator = GitCliffChangelogGenerator(self._command_runner)
+        self._changelog_generator = GitCliffChangelogGenerator(
+            self._command_runner,
+            changelog_path=changelog_file,
+            cliff_config_path=cliff_config_file,
+        )
         self._pull_request_service = GitHubCliPullRequestService(self._command_runner)
         self._message_bus: InMemoryReleaseCommandBus | None = None
 
@@ -56,12 +79,15 @@ class Container:
             changelog_generator=self._changelog_generator,
             transaction=InMemoryReleaseTransaction(),
             message_bus=self._message_bus,
+            release_branch_prefix=self._configuration.release_branch_prefix,
         )
 
     def get_open_release_pull_request_use_case(self) -> OpenReleasePullRequestService:
         """Creates open release pull request use case."""
         return OpenReleasePullRequestService(
             pull_request_service=self._pull_request_service,
+            base_branch=self._configuration.base_branch,
+            release_branch_prefix=self._configuration.release_branch_prefix,
         )
 
     async def _setup_message_handlers(self) -> None:
@@ -69,6 +95,8 @@ class Container:
         self._message_bus = InMemoryReleaseCommandBus()
         open_pull_request_service = OpenReleasePullRequestService(
             pull_request_service=self._pull_request_service,
+            base_branch=self._configuration.base_branch,
+            release_branch_prefix=self._configuration.release_branch_prefix,
         )
         open_pull_request_handler = OpenPullRequestHandler(open_pull_request_service)
 

@@ -19,6 +19,7 @@ def _make_generator(repo: GitTestRepository) -> GitCliffChangelogGenerator:
     return GitCliffChangelogGenerator(
         runner=repo.scoped_runner(),
         changelog_path=repo.path / "CHANGELOG.md",
+        cliff_config_path=repo.path / "cliff.toml",
     )
 
 
@@ -554,6 +555,7 @@ class TestGitCliffChangelogGeneratorIntegration:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.chdir(tmp_path)
+        (tmp_path / "cliff.toml").write_text('[changelog]\noutput = "-"\n', encoding="utf-8")
 
         generator = GitCliffChangelogGenerator(
             runner=SubprocessCommandRunner(),

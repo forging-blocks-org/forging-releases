@@ -3,22 +3,27 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from forging_releases.application.errors import ChangelogGenerationError
+from forging_releases.application.errors import (
+    ChangelogGenerationError,
+    CommandExecutionError,
+)
 from forging_releases.application.ports.outbound import (
     ChangelogGenerator,
     ChangelogRequest,
     ChangelogResponse,
+    CommandRunner,
 )
-from forging_releases.infrastructure.commons.process import CommandRunner
 
 _DEFAULT_CHANGELOG_PATH = Path("CHANGELOG.md")
+_DEFAULT_CLIFF_CONFIG_PATH = Path("cliff.toml")
 
 
 class GitCliffChangelogGenerator(ChangelogGenerator):
     """Adapter that generates changelogs using git-cliff.
 
-    Delegates all formatting to cliff.toml. The adapter is responsible
-    only for resolving the correct commit range and invoking the binary.
+    Delegates all formatting to the configured git-cliff file. The adapter is
+    responsible only for resolving the correct commit range and invoking the
+    binary.
 
     Range resolution strategy:
     - requested tag exists  → generate from that tag: `<tag>..`
@@ -29,11 +34,16 @@ class GitCliffChangelogGenerator(ChangelogGenerator):
         self,
         runner: CommandRunner,
         changelog_path: Path = _DEFAULT_CHANGELOG_PATH,
+        cliff_config_path: Path = _DEFAULT_CLIFF_CONFIG_PATH,
     ) -> None:
         self._runner = runner
         self._changelog_path = changelog_path
-
+        self._cliff_config_path = cliff_config_path
     async def generate(self, request: ChangelogRequest) -> ChangelogResponse:
+        if not self._cliff_config_path.is_file():
+            raise ChangelogGenerationError(
+                f"git-cliff configuration file not found: {self._cliff_config_path}"
+            )
         from_tag = f"v{request.from_version}"
         tag_exists = self._tag_exists(from_tag)
 
@@ -49,13 +59,14 @@ class GitCliffChangelogGenerator(ChangelogGenerator):
 
     def _tag_exists(self, tag: str) -> bool:
         try:
-            self._runner.run(
-                ["git", "rev-parse", "--verify", tag],
-                suppress_error_log=True,
-            )
+            self._runner.run(["git", "rev-parse", "--verify", tag])
             return True
-        except RuntimeError:
+        except (CommandExecutionError, RuntimeError):
             return False
+        except FileNotFoundError as exc:
+            raise ChangelogGenerationError(
+                "git is not installed or not found in PATH"
+            ) from exc
 
     def _resolve_range_and_version(
         self,
@@ -79,7 +90,14 @@ class GitCliffChangelogGenerator(ChangelogGenerator):
         *,
         dry_run: bool = False,
     ) -> str:
-        cmd = ["git-cliff", "--output", "-"]
+
+        cmd = [
+            "git-cliff",
+            "--config",
+            str(self._cliff_config_path),
+            "--output",
+            "-",
+        ]
 
         if version_tag:
             cmd += ["--tag", version_tag]
@@ -91,18 +109,33 @@ class GitCliffChangelogGenerator(ChangelogGenerator):
 
         try:
             output = self._runner.run(cmd, check=True)
-            if not dry_run:
-                merged = self._merge_with_existing(output)
-                self._changelog_path.write_text(
-                    merged if merged.endswith("\n") else merged + "\n", encoding="utf-8"
-                )
-            return output
         except FileNotFoundError as exc:
             raise ChangelogGenerationError(
                 "git-cliff is not installed or not found in PATH"
             ) from exc
+        except CommandExecutionError as exc:
+            detail = (
+                exc.stderr.strip()
+                or exc.stdout.strip()
+                or f"exit code {exc.returncode}"
+            )
+            raise ChangelogGenerationError(f"git-cliff failed: {detail}") from exc
         except RuntimeError as exc:
             raise ChangelogGenerationError(f"git-cliff failed: {exc}") from exc
+
+        if not output.strip() or dry_run:
+            return output
+
+        try:
+            merged = self._merge_with_existing(output)
+            self._changelog_path.write_text(
+                merged if merged.endswith("\n") else merged + "\n", encoding="utf-8"
+            )
+        except OSError as exc:
+            raise ChangelogGenerationError(
+                f"could not write changelog {self._changelog_path}: {exc}"
+            ) from exc
+        return output
 
     def _merge_with_existing(self, new_content: str) -> str:
         if not self._changelog_path.exists():

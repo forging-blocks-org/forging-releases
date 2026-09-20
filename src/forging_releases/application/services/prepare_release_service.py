@@ -1,6 +1,6 @@
 from typing import Any
 
-from forging_blocks.foundation.messages.command import Command
+from forging_blocks.domain.messages.command import Command
 from forging_releases.application.ports.inbound import (
     PrepareReleaseInput,
     PrepareReleaseOutput,
@@ -44,12 +44,14 @@ class PrepareReleaseService(PrepareReleaseUseCase):
         transaction: ReleaseTransaction,
         message_bus: ReleaseCommandBus[Command[Any]],
         changelog_generator: ChangelogGenerator,
+        release_branch_prefix: str = "release/v",
     ) -> None:
         self._versioning_service = versioning_service
         self._version_control = version_control
         self._transaction = transaction
         self._message_bus: ReleaseCommandBus[Command[Any]] = message_bus
         self._changelog_generator = changelog_generator
+        self._release_branch_prefix = release_branch_prefix
 
     async def execute(self, request: PrepareReleaseInput) -> PrepareReleaseOutput:
         level = ReleaseLevel.from_str(request.level)
@@ -57,7 +59,10 @@ class PrepareReleaseService(PrepareReleaseUseCase):
         current_version = self._versioning_service.current_version()
         next_version = self._versioning_service.compute_next_version(level)
 
-        branch = ReleaseBranchName.from_version(next_version)
+        branch = ReleaseBranchName.from_version(
+            next_version,
+            prefix=self._release_branch_prefix,
+        )
         tag = TagName.for_version(next_version)
 
         branch_exists = self._version_control.branch_exists(branch)

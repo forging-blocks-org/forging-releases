@@ -291,3 +291,33 @@ class TestPrepareReleaseServiceErrorPath:
         with pytest.raises(InvalidReleaseLevelError) as exc_info:
             await service.execute(request)  # type: ignore[reportArgumentType]
         assert "invalid" in str(exc_info.value)
+
+
+@pytest.mark.unit
+class TestPrepareReleaseServiceConfiguration:
+    async def test_execute_uses_configured_release_branch_prefix(self) -> None:
+        versioning_service = Mock(spec=VersioningService)
+        versioning_service.current_version.return_value = _make_version(1, 0, 0)
+        versioning_service.compute_next_version.return_value = _make_version(1, 1, 0)
+        version_control = Mock(spec=VersionControl)
+        version_control.branch_exists.return_value = False
+        transaction = _make_transaction_mock()
+        message_bus = _make_message_bus_mock()
+        changelog_generator = Mock(spec=ChangelogGenerator)
+        changelog_generator.generate = AsyncMock(
+            return_value=ChangelogResponse(entries=[]),
+        )
+        service = PrepareReleaseService(
+            versioning_service=versioning_service,
+            version_control=version_control,
+            transaction=transaction,
+            message_bus=message_bus,
+            changelog_generator=changelog_generator,
+            release_branch_prefix="stable/",
+        )
+
+        result = await service.execute(
+            PrepareReleaseInput(level="minor", dry_run=True),
+        )
+
+        assert result.branch == "stable/1.1.0"

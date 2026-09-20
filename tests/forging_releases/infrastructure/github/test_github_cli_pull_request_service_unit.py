@@ -1,5 +1,9 @@
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
+from forging_releases.application.errors import (
+    CommandExecutionError,
+    PullRequestServiceError,
+)
 from forging_releases.application.ports.outbound import OpenPullRequestOutput
 from forging_releases.domain.entities import ReleasePullRequest
 from forging_releases.domain.value_objects import ReleaseBranchName
@@ -239,3 +243,66 @@ class TestGitHubCliPullRequestService:
         assert call_args[head_index + 1] == "release/v1.2.3"
         assert call_args[title_index + 1] == "Release v1.2.3"
         assert call_args[body_index + 1] == "Automated release for version 1.2.3"
+
+    def test_open_wraps_gh_failure_with_adapter_owned_error(
+        self,
+        runner: FakeCommandRunner,
+        sample_pull_request: ReleasePullRequest,
+    ) -> None:
+        runner.configured_outputs = [
+            CommandExecutionError(
+                ("gh", "pr", "create"),
+                1,
+                "",
+                "authentication required",
+            )
+        ]
+
+        with pytest.raises(PullRequestServiceError) as exc_info:
+            GitHubCliPullRequestService(runner).open(sample_pull_request)
+
+        assert exc_info.value.operation == "create"
+        assert "authentication required" in exc_info.value.message.value
+
+    def test_open_wraps_missing_gh_executable(
+        self,
+        runner: FakeCommandRunner,
+        sample_pull_request: ReleasePullRequest,
+    ) -> None:
+        runner.configured_outputs = [FileNotFoundError("gh")]
+
+        with pytest.raises(PullRequestServiceError) as exc_info:
+            GitHubCliPullRequestService(runner).open(sample_pull_request)
+
+        assert exc_info.value.operation == "create"
+        assert "not found in PATH" in exc_info.value.message.value
+
+    @pytest.mark.parametrize(
+        "output",
+        [
+            "",
+            "not-a-url",
+            "https://github.com/org/repo/issues/1",
+            "http:///org/repo/pull/1",
+            "https://github.com/pull/1",
+            "https://[::1",
+            "https://github.com/org/repo/pull/not-a-number",
+            "https://github.com:bad/org/repo/pull/1",
+            "https://github.com/org/repo/pull/1?draft=true",
+            "https://github.com/org/repo/pull/1#details",
+            "https://github.com/org/repo/pull/1;details",
+        ],
+    )
+    def test_open_rejects_invalid_gh_output(
+        self,
+        runner: FakeCommandRunner,
+        sample_pull_request: ReleasePullRequest,
+        output: str,
+    ) -> None:
+        runner.configured_outputs = [output]
+
+        with pytest.raises(PullRequestServiceError) as exc_info:
+            GitHubCliPullRequestService(runner).open(sample_pull_request)
+
+        assert exc_info.value.operation == "create"
+        assert "invalid pull request URL" in exc_info.value.message.value

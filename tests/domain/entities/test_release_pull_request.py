@@ -1,4 +1,3 @@
-# pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false
 import pytest
 from forging_releases.domain.entities import ReleasePullRequest
 from forging_releases.domain.errors import InvalidReleasePullRequestError
@@ -21,10 +20,20 @@ class TestReleasePullRequest:
         assert pr.base == "main"
         assert pr.head.value == "release/v1.2.3"
 
-    def test_init_when_base_is_not_main_then_error(self) -> None:
+    def test_init_when_base_is_custom_branch_then_success(self) -> None:
+        pr = ReleasePullRequest(
+            base="develop",
+            head=ReleaseBranchName("release/v1.2.3"),
+            title="Release v1.2.3",
+            body="Release notes",
+        )
+
+        assert pr.base == "develop"
+
+    def test_init_when_base_is_empty_then_error(self) -> None:
         with pytest.raises(InvalidReleasePullRequestError):
             ReleasePullRequest(
-                base="develop",
+                base=" ",
                 head=ReleaseBranchName("release/v1.2.3"),
                 title="Release v1.2.3",
                 body="Release notes",

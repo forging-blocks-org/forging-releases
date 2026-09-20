@@ -9,7 +9,7 @@ class ReleasePullRequest:
     """Represents the intent to publish a release.
 
     Domain invariants:
-    - base must be "main"
+    - base must be a non-empty branch name.
     - head must be a valid release branch (enforced by ReleaseBranchName type)
     """
 
@@ -19,5 +19,5 @@ class ReleasePullRequest:
     body: str
 
     def __post_init__(self) -> None:
-        if self.base != "main":
-            raise InvalidReleasePullRequestError("Base branch must be main")
+        if not self.base.strip():
+            raise InvalidReleasePullRequestError("Base branch must not be empty")

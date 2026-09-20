@@ -1,19 +1,24 @@
 [project]
 name = "forging-releases"
 version = "0.1.0"
-description = "Release automation CLI for Forging Blocks projects"
+description = "Reusable release automation for PEP 621 Python projects"
 readme = "README.md"
 requires-python = ">=3.14"
 license = "MIT"
+authors = [
+    { name = "Glauber Brennon", email = "glauberbrennon@gmail.com" },
+]
 keywords = ["release", "automation", "cli", "forging-blocks"]
 dependencies = [
-    "click>=8.4.2",
-    "forging-blocks>=0.4.0",
+    "forging-blocks==0.5.0",
     "tomlkit>=0.15.1",
 ]
 
-[tool.uv.sources]
-forging-blocks = { path = "../forging-blocks", editable = true }
+[project.urls]
+homepage = "https://github.com/forging-blocks-org/forging-releases"
+repository = "https://github.com/forging-blocks-org/forging-releases"
+
+
 
 [dependency-groups]
 dev = [
@@ -25,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-forging-releases = "forging_releases.cli:main"
+forging-releases = "forging_releases.presentation.__main__:main"
 
 [build-system]
 requires = ["hatchling"]

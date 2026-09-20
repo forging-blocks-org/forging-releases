@@ -4,12 +4,18 @@ from pathlib import Path
 from typing import cast
 
 import tomlkit
+from tomlkit.exceptions import ParseError
 
 from forging_releases.application.ports.outbound import VersioningService
+from forging_releases.domain.errors import InvalidReleaseVersionError
 from forging_releases.domain.value_objects import (
     ReleaseLevel,
     ReleaseVersion,
 )
+
+
+def _metadata_error(detail: str) -> InvalidReleaseVersionError:
+    return InvalidReleaseVersionError(f"project.version: {detail}")
 
 
 class PyProjectVersioningService(VersioningService):
@@ -33,9 +39,7 @@ class PyProjectVersioningService(VersioningService):
         self._pyproject_path = pyproject_path
 
     def current_version(self) -> ReleaseVersion:
-        doc = self._read_doc()
-        version_str = cast(str, doc["project"]["version"])  # type: ignore[index]
-        return ReleaseVersion.from_str(version_str)
+        return self._parse_version(self._project_version())
 
     def compute_next_version(
         self,
@@ -57,10 +61,12 @@ class PyProjectVersioningService(VersioningService):
         *,
         dry_run: bool = False,
     ) -> None:
+        doc = self._read_doc()
+        project = self._project_table(doc)
+        self._parse_version(self._version_value(project))
         if dry_run:
             return
-        doc = self._read_doc()
-        doc["project"]["version"] = version.value  # type: ignore[index]
+        project["version"] = version.value
         self._write_doc(doc)
 
     def rollback_version(
@@ -69,10 +75,54 @@ class PyProjectVersioningService(VersioningService):
     ) -> None:
         self.apply_version(previous)
 
+    def _project_version(self) -> object:
+        doc = self._read_doc()
+        return self._version_value(self._project_table(doc))
+
+    @staticmethod
+    def _version_value(project: dict[str, object]) -> object:
+        if "version" not in project:
+            raise _metadata_error("the field is missing")
+        return project["version"]
+
+    @staticmethod
+    def _parse_version(version: object) -> ReleaseVersion:
+        if not isinstance(version, str):
+            raise _metadata_error(
+                f"must be a string, got {type(version).__name__}"
+            )
+        try:
+            return ReleaseVersion.from_str(version)
+        except InvalidReleaseVersionError as exc:
+            raise _metadata_error(
+                f"must use MAJOR.MINOR.PATCH format (got {version!r})"
+            ) from exc
+
+    @staticmethod
+    def _project_table(doc: tomlkit.TOMLDocument) -> dict[str, object]:
+        project = cast(object, doc.get("project"))
+        if not isinstance(project, dict):
+            raise _metadata_error("the [project] table is missing")
+        return cast(dict[str, object], project)
+
     def _read_doc(self) -> tomlkit.TOMLDocument:
-        with self._pyproject_path.open("r", encoding="utf-8") as f:
-            return tomlkit.parse(f.read())
+        try:
+            with self._pyproject_path.open("r", encoding="utf-8") as f:
+                return tomlkit.parse(f.read())
+        except OSError as exc:
+            raise _metadata_error(
+                f"could not read {self._pyproject_path}: {exc}"
+            ) from exc
+        except ParseError as exc:
+            raise _metadata_error(
+                f"could not parse {self._pyproject_path}: {exc}"
+            ) from exc
 
     def _write_doc(self, doc: tomlkit.TOMLDocument) -> None:
-        with self._pyproject_path.open("w", encoding="utf-8") as f:
-            f.write(tomlkit.dumps(doc))  # type: ignore[reportUnknownMemberType]
+        try:
+            with self._pyproject_path.open("w", encoding="utf-8") as f:
+                f.write(tomlkit.dumps(doc))
+        except OSError as exc:
+            raise _metadata_error(
+                f"could not write {self._pyproject_path}: {exc}"
+            ) from exc

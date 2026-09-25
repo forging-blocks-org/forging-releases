@@ -7,13 +7,9 @@ requires-python = ">=3.14"
 license = "MIT"
 keywords = ["release", "automation", "cli", "forging-blocks"]
 dependencies = [
-    "click>=8.4.2",
-    "forging-blocks>=0.4.0",
+    "forging-blocks>=0.5.0",
     "tomlkit>=0.15.1",
 ]
-
-[tool.uv.sources]
-forging-blocks = { path = "../forging-blocks", editable = true }
 
 [dependency-groups]
 dev = [
@@ -25,7 +21,7 @@ dev = [
 ]
 
 [project.scripts]
-forging-releases = "forging_releases.cli:main"
+forging-releases = "forging_releases.presentation.__main__:run"
 
 [build-system]
 requires = ["hatchling"]

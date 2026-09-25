@@ -1,9 +1,9 @@
+from typing import Any
+
 # pyright: reportPrivateUsage=false, reportMissingTypeArgument=false, reportUnknownParameterType=false, reportUnknownMemberType=false, reportUnknownVariableType=false, reportUnknownArgumentType=false, reportMissingParameterType=false, reportIncompatibleMethodOverride=false, reportUnusedClass=false, reportFunctionMemberAccess=false, reportOptionalMemberAccess=false
-
 import pytest
-
 from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
-from forging_blocks.foundation.messages.command import Command
+from forging_blocks.domain.messages.command import Command
 
 from forging_releases.infrastructure.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
@@ -24,6 +24,10 @@ class _TestCommand(Command[PayloadType]):
     @property
     def _payload(self) -> PayloadType:
         return self._val
+
+    @classmethod
+    def from_payload_fields(cls, data: PayloadType, metadata: Any = None) -> Any:
+        return cls()
 
 
 class _TestHandler(MessageHandlerPort[_TestCommand, None]):

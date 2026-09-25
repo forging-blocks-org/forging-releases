@@ -1,7 +1,7 @@
 """Error returned when a release level string is not valid."""
 
+from forging_blocks.foundation.errors import RuleViolationError
 from forging_blocks.foundation.errors.core import ErrorMessage
-from forging_blocks.foundation.errors.rule_violation_error import RuleViolationError
 
 
 class InvalidReleaseLevelValueError(RuleViolationError):

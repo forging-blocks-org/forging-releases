@@ -1,7 +1,7 @@
 """Error returned when a version string cannot be parsed into a valid release version."""
 
+from forging_blocks.foundation.errors import RuleViolationError
 from forging_blocks.foundation.errors.core import ErrorMessage
-from forging_blocks.foundation.errors.rule_violation_error import RuleViolationError
 
 
 class InvalidVersionError(RuleViolationError):

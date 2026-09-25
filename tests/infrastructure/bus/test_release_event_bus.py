@@ -2,12 +2,12 @@
 from typing import Any
 
 import pytest
+from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
+from forging_blocks.domain.messages.command import Command
+
 from forging_releases.infrastructure.bus.in_memory_release_command_bus import (
     InMemoryReleaseCommandBus,
 )
-
-from forging_blocks.application.ports.inbound.message_handler_port import MessageHandlerPort
-from forging_blocks.foundation.messages.command import Command
 
 
 class FakeCommand(Command):
@@ -21,8 +21,13 @@ class FakeCommand(Command):
     def value(self) -> str:
         return self._value
 
+    @property
     def _payload(self) -> dict[str, Any]:
         return {"value": self._value}
+
+    @classmethod
+    def from_payload_fields(cls, data: Any, metadata: Any = None) -> Any:
+        return cls(val=data.get("value", "test"))
 
 
 class FakeHandler(MessageHandlerPort[FakeCommand, None]):
@@ -97,8 +102,13 @@ class TestInMemoryReleaseCommandBus:
             def value(self) -> str:
                 return self._value
 
+            @property
             def _payload(self) -> dict[str, Any]:
                 return {"value": self._value}
+
+            @classmethod
+            def from_payload_fields(cls, data: Any, metadata: Any = None) -> Any:
+                return cls(val=data.get("value", "other"))
 
         with pytest.raises(KeyError):
             await bus.send(OtherCommand())
